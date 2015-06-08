@@ -19,10 +19,23 @@ According to our blueprint, we plan to release the following components one by o
 * `patdroid.layout`: understanding layout.xml
 * `patdroid.soot`: my tribute to [Sable's Soot](http://sable.github.io/soot/). I learned a lot from attending Sable's seminars held at [McGill McConnell 2rd floor](https://www.mcgill.ca/maps/mcconnell-engineering-building)
 
+## Using PATDroid
+PATDroid uses `Apache License 2.0`. Additionally, if you intend to use it in academic work, please cite our paper:
+```bibtex
+@inproceedings{appaudit,
+ author = {Mingyuan Xia and Lu Gong and Yuanhao Lyu and Zhengwei Qi and Xue Liu},
+ title = {Effective Real-time Android Application Auditing},
+ booktitle = {Proceedings of the 2015 IEEE Symposium on Security and Privacy},
+ series = {SP '15},
+ year = {2015},
+ publisher = {IEEE Computer Society},
+} 
+```
+
 ## History and Philosophy
-PATDroid was part of [AppAudit](http://appaudit.io), which was intended to check if an Android app leaks personal data.
-You can find out more details from our [S&P'15 paper]().
-We make part of AppAudit public to be useful to researchers and programmers.
+PATDroid was part of [AppAudit](http://appaudit.io), which is a security tool that checks if an Android app leaks personal data.
+You can find out more details from our [S&P'15 paper](http://www.ieee-security.org/TC/SP2015/papers-archived/6949a899.pdf).
+We make part of AppAudit public to be useful to researchers and developers.
 Overall, we try to make the entire project
 
 1. concise (with fewer abstractions as possible such that users wont feel like searching a needle in the ocean) 
@@ -37,4 +50,3 @@ I am always open to suggestions and willing to hear interesting projects that ma
 Right now, several exciting research projects across McGill University and Shanghai Jiao Tong University are using PATDroid. We will update links to them soon.
 
 * Contact: [email](mailto:ken.mingyuan@gmail.com), new issues, pull requests.
-* License: Apache License 2.0
