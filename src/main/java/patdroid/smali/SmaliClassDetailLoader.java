@@ -177,7 +177,7 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
                 retType, paramTypes, accessFlags);
     }
 
-    static ClassInfo[] findOrCreateClass(Collection<? extends CharSequence> l) {
+    public static ClassInfo[] findOrCreateClass(Collection<? extends CharSequence> l) {
         ClassInfo[] ret = new ClassInfo[l.size()];
         int i = 0;
         for (CharSequence s : l) {
