@@ -17,23 +17,20 @@
 *   Mingyuan Xia
 */
 
-package patdroid.core;
+package patdroid.dalvik;
 
 import java.util.Arrays;
 import java.util.Map;
 
+import patdroid.core.ClassInfo;
+import patdroid.core.FieldInfo;
 import patdroid.util.Pair;
 
 /**
  * Unified Dalvik VM instruction
- * <p>
- * Here shows the advantage of C, where union structure can save space.. kidding
- * This structure is estimated to use 5(bytes)+3(paddings)+4+4=16B
- * </p>
- * <p>
- * Avoid using enum since it takes a lot of memory (compared with byte)
- * , according to my misunderstanding :-).
- * </p>
+ * <p> With C/C++, union can help save space. This only is designed to be compact. </p>
+ * <p> Plain-old opcode table is preferred than inheritance as compiler could
+ * generate more efficient code with this </p>
  */
 public final class Instruction {
 	// major opcodes

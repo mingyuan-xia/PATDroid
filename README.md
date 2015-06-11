@@ -5,12 +5,13 @@ PATDroid is a collection of tools and data structures for analyzing Android appl
 ## Packages
 Here is a one-sentence description for each package. Find the detailed usage tutorials on our wiki by clicking on the package name. PATDroid requires Java6. It goes well with Oracle/OpenJDK 1.6, 1.7, Dalvik (Yes, you can run it on a smartphone). We provide gradle, Intellij IDEA and Eclipse support for the project.
 
-* [`patdroid.core`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-core): provide abstractions for method, class, field, dalvik instructions and primitive Java type values
+* [`patdroid.core`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-core): provide abstractions for method, class, field, and primitive Java type values
 * [`patdroid.permission`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-permission): specify what Android permissions are needed by every Android APIs
 * [`patdroid.fs`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-fs): an emulated Android file system
+* [`patdroid.dalvik`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-dalvik): Android Dalvik JVM instructions and representations
+* [`patdroid.smali`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-smali): using [SMALI](https://code.google.com/p/smali/) to extract classes, methods, fields and instructions from an APK 
 
 According to our blueprint, we plan to release the following components one by one in the near future:
-* `patdroid.smali`: using [SMALI](https://code.google.com/p/smali/) to extract classes, methods, fields and instructions from an APK 
 * `patdroid.dex2jar`: using [dex2jar](https://github.com/pxb1988/dex2jar) to extract classes, methods, fields and instructions from an APK
 * `patdroid.manifest`: the model for AndroidManifest.xml and Android components such as activity, service, broadcast receivers
 * `patdroid.sdk`: modeling different Android API levels

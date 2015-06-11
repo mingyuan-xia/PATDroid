@@ -14,5 +14,6 @@ repositories {
 
 dependencies {
     testCompile 'junit:junit:4.12'
+    compile files('libs/baksmali-2.0.5.jar')
 }
 

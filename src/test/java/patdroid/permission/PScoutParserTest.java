@@ -5,9 +5,8 @@ import org.junit.Test;
 
 public class PScoutParserTest {
     @Test
-    public void testPrase() {
+    public void testParse() {
         // TODO: test with
         // http://pscout.csl.toronto.edu/download.php?file=results/jellybean_publishedapimapping
-        Assert.assertEquals("haha", "haha");
     }
 }

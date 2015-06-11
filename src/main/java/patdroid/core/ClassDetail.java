@@ -15,6 +15,7 @@
 *
 * Contributors:
 *   Mingyuan Xia
+*   Lu Gong
 */
 
 package patdroid.core;
@@ -61,7 +62,8 @@ public final class ClassDetail {
 	public ArrayList<ClassInfo> derivedClasses = new ArrayList<ClassInfo>();
 	public final int accessFlags;
 	/**
-	 * Create a details class for a class
+	 * Create a details class for a class.
+	 * Only a ClassDetailLoader could construct a ClassDetail
 	 * @param superClass its base class
 	 * @param interfaces interfaces
 	 * @param accessFlags 
@@ -70,7 +72,7 @@ public final class ClassDetail {
 	 * @param staticFields static fields, stored in a name-type map 
 	 * @param isFrameworkClass whether it is a framework class
 	 */
-	public ClassDetail(ClassInfo superClass, ClassInfo[] interfaces,
+	ClassDetail(ClassInfo superClass, ClassInfo[] interfaces,
 					   int accessFlags, MethodInfo[] methods,
 					   HashMap<String, ClassInfo> fields,
 					   HashMap<String, ClassInfo> staticFields, boolean isFrameworkClass) {
@@ -150,8 +152,8 @@ public final class ClassDetail {
 	/**
 	 * Find a concrete method given a method prototype
 	 * 
-	 * @param m The method
-	 * @return The rebound method
+	 * @param mproto The prototype of a method
+	 * @return The method matching the prototype in the class
 	 */
 	public MethodInfo findMethod(MethodInfo mproto) {
 		Deque<ClassDetail> q = new ArrayDeque<ClassDetail>();
@@ -222,10 +224,10 @@ public final class ClassDetail {
 	}
 	
 	/**
-	 * TypeA is convertible to TypeB if and only if TypeB is a (indirect) 
+	 * TypeA is convertible to TypeB if and only if TypeB is an (indirect)
 	 * superclass or an (indirect) interface of TypeA.
 	 *  
-	 * @param type
+	 * @param type typeB
 	 * @return if this class can be converted to the other.
 	 */
 	public final boolean isConvertibleTo(ClassInfo type) {

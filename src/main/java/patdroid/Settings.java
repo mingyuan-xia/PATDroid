@@ -29,5 +29,9 @@ public class Settings {
     /**
      * The report mode generates a JSON output
      */
-    public static final boolean enableReportMode = true;
+    public static final boolean enableReportMode = logLevel >= Log.MODE_REPORT;
+    /**
+     * The Android API Level
+     */
+    public static int apiLevel = 15;
 }

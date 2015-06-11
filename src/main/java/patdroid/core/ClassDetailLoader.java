@@ -19,6 +19,10 @@
 
 package patdroid.core;
 
+import patdroid.util.Log;
+
+import java.util.HashMap;
+
 /**
  * The base ClassDetail loader. Itself does nothing but throwing an exception.
  * Any loader extending it should do some work.
@@ -29,4 +33,23 @@ public class ClassDetailLoader {
     public void load(ClassInfo ci) throws ClassNotFoundException,
             ExceptionInInitializerError, NoClassDefFoundError
     { throw x_x; }
+
+    protected static ClassDetail createDetail(ClassInfo superClass, ClassInfo[] interfaces,
+                int accessFlags, MethodInfo[] methods,
+                HashMap<String, ClassInfo> fields,
+                HashMap<String, ClassInfo> staticFields, boolean isFrameworkClass) {
+        return new ClassDetail(superClass, interfaces, accessFlags, methods, fields, staticFields, isFrameworkClass);
+    }
+
+    /**
+     * Set the details of the class, usually used only by class loader
+     * <p>
+     * <b>Note:</b> this might start class loading if the class is not loaded yet
+     * @param details the detailed info about the class
+     */
+    protected static void setDetails(ClassInfo ci, ClassDetail details) {
+        Log.warnwarn(ci.details == null, "class is already loaded" + ci);
+        ci.details = details;
+        details.updateDerivedClasses(ci);
+    }
 }

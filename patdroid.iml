@@ -26,5 +26,6 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="baksmali-2.0.5" level="project" />
   </component>
 </module>

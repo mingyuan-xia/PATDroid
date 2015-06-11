@@ -37,19 +37,6 @@ import patdroid.util.Log;
  * attached to the ClassInfo.
  * <p>
  * ClassInfos are obtained by find-series functions not created by constructors.
- * <p>
- * The class name convention difference (Java vs. Dalvik):
- * <table>
- * <thead>
- * 	<tr><th>Case</th><th>Java</th><th>Dalvik</th></tr>
- * </thead>
- * <tbody>
- * </tbody>
- * <tr><td>String.class.getName()</td><td>"java.lang.String"</td><td>"Ljava/lang/String;"</td></tr>
- * <tr><td>byte.class.getName()</td><td>"byte"</td><td>"B"</td></tr>
- * <tr><td>(new Object[3]).getClass().getName()</td><td>"[Ljava.lang.Object;"</td><td>"[Ljava/lang/Object;"</td></tr>
- * <tr><td>(new int[3][4][5][6][7][8][9]).getClass().getName()</td><td>"[[[[[[[I"</td><td>"[[[[[[[I"</td></tr>
- * </table>
  */
 public final class ClassInfo {
 	private static final HashMap<String, ClassInfo> classes = new HashMap<String, ClassInfo>();
@@ -86,8 +73,8 @@ public final class ClassInfo {
 	 * The Java canonical class name
 	 */
 	public final String fullName;
-	private boolean isMissing;
-	private ClassDetail details;
+	boolean isMissing;
+	ClassDetail details;
 
 	/**
 	 * Low-level constructor
@@ -473,17 +460,6 @@ public final class ClassInfo {
 		}
 	}
 
-	/**
-	 * Set the details of the class, usually used only by class loader
-	 * <p>
-	 * <b>Note:</b> this might start class loading if the class is not loaded yet
-	 * @param details the detailed info about the class
-	 */
-	public void setDetails(ClassDetail details) {
-		Log.warnwarn(this.details == null, "class is already loaded" + this);
-		this.details = details;
-		details.updateDerivedClasses(this);
-	}
 
 	/**
 	 * An almost final class has no derived classes in the current class tree

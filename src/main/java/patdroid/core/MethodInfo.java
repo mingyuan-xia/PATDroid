@@ -20,6 +20,8 @@
 
 package patdroid.core;
 
+import patdroid.dalvik.Instruction;
+
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 

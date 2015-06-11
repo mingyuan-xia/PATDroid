@@ -34,6 +34,8 @@ public class Log {
     public static final int MODE_WARNING = 3;
     public static final int MODE_SEVERE_WARNING = 4;
     public static final int MODE_ERROR = 5;
+    public static final int MODE_REPORT = 6;
+    public static final int MODE_CONCISE_REPORT = 7;
     public static final Writer stdout = new BufferedWriter(new OutputStreamWriter(System.out));
     public static final Writer stderr = new BufferedWriter(new OutputStreamWriter(System.err));
     public static Writer out = stdout;
@@ -43,17 +45,20 @@ public class Log {
         @Override
         protected String initialValue() { return ""; }
     };
-    protected static boolean reportMode = Settings.enableReportMode;
 
-    protected static void log(int theLevel, String title, String msg) {
-        if (!reportMode && theLevel >= Settings.logLevel) {
+    private static void writeLog(int theLevel, String title, String msg, Writer w) {
+        if (theLevel >= Settings.logLevel) {
             try {
-                out.write(indent.get() + "[" + title + "]: " + msg + "\n");
+                w.write(indent.get() + "[" + title + "]: " + msg + "\n");
             } catch (IOException e) {
                 // logging system should never die
                 System.exit(1);
             }
         }
+    }
+
+    protected static void log(int theLevel, String title, String msg) {
+        writeLog(theLevel, title, msg, out);
     }
 
     protected static void badlog(int theLevel, String title, String msg) {
@@ -63,14 +68,7 @@ public class Log {
             case MODE_ERROR: Report.nErrors++; break;
             default: break;
         }
-        if (!reportMode && theLevel >= Settings.logLevel) {
-            try {
-                err.write(indent.get() + "[" + title + "]: " + msg + "\n");
-            } catch (IOException e) {
-                // logging system should never die
-                System.exit(1);
-            }
-        }
+        writeLog(theLevel, title, msg, err);
     }
 
     public static void increaseIndent() { indent.set(indent.get() + "  "); }
