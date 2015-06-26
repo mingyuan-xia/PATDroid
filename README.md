@@ -1,5 +1,6 @@
 # PATDroid (A Program Analysis Toolkit for Android)
 <img align="right" src="img/icon-small.png" />
+[![Build Status](https://travis-ci.org/mingyuan-xia/PATDroid.svg?branch=master)](https://travis-ci.org/mingyuan-xia/PATDroid)
 PATDroid is a collection of tools and data structures for analyzing Android applications and the system itself. We intend to build it as a common base for developing novel mobile software debugging, refactoring, reliability/security tools. We also collect various resources, links, related papers and tips for various innovative Android program analysis tasks.
 
 ## Packages
