@@ -1167,7 +1167,7 @@ public final class MethodImplementationTranslator {
 		final MethodInfo mi = SmaliClassDetailLoader.translateMethodReference(method, accessFlags);
 		final int[] args = rebuildArgs(mi, getArguments(i5));
 		i.extra = new Object[] {mi, args};
-		resolver.registerForResolve(this.mi.insns, currentCodeIndex);
+		resolver.registerForResolve(this.mi, currentCodeIndex);
 		return i;
 	}
 	
@@ -1197,7 +1197,7 @@ public final class MethodImplementationTranslator {
 		final MethodInfo mi = SmaliClassDetailLoader.translateMethodReference(method, accessFlags);
 		final int[] args = rebuildArgs(mi, getArguments(ir));
 		i.extra = new Object[] {mi, args};
-		resolver.registerForResolve(this.mi.insns, currentCodeIndex);
+		resolver.registerForResolve(this.mi, currentCodeIndex);
 		return i;
 	}
 

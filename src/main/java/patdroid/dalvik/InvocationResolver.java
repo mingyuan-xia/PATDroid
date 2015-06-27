@@ -23,27 +23,28 @@ import patdroid.core.MethodInfo;
 import patdroid.util.Log;
 import patdroid.util.Pair;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 
 public class InvocationResolver {
-    private final ArrayList<Pair<Instruction[], Integer>> a = new ArrayList<Pair<Instruction[], Integer>>();
+    public final ArrayList<Pair<MethodInfo, Integer>> a = new ArrayList<Pair<MethodInfo, Integer>>();
 
     /**
      * Register an invocation instruction to be resolved
      * @param ins the instruction stream
      * @param pos the position of the invocation instruction
      */
-    public void registerForResolve(Instruction[] ins, int pos) {
-        a.add(new Pair<Instruction[], Integer>(ins, pos));
+    public void registerForResolve(MethodInfo ins, int pos) {
+        a.add(new Pair<MethodInfo, Integer>(ins, pos));
     }
 
     /**
      * resolve all invocation instructions
      */
     public void resolveAll() {
-        for (Pair<Instruction[], Integer> p : a) {
+        for (Pair<MethodInfo, Integer> p : a) {
             final int insn_idx = p.second.intValue();
-            final Instruction i = p.first[insn_idx];
+            final Instruction i = p.first.insns[insn_idx];
             final Object[] params = (Object[]) i.extra;
             final MethodInfo mproto = (MethodInfo) params[0];
             params[0] = mproto.myClass.findMethod(mproto);

@@ -36,7 +36,7 @@ import patdroid.dalvik.Dalvik;
 public class SmaliClassDetailLoader extends ClassDetailLoader {
     private static final ClassNotFoundException x_x =
             new ClassNotFoundException("the smali ClassDetail loader does not load class one by one, use loadAll()");
-    private final InvocationResolver resolver;
+    public final InvocationResolver resolver;
 
     @Override
     public void load(ClassInfo ci) throws ClassNotFoundException,
