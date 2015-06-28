@@ -28,14 +28,15 @@ import java.util.ArrayList;
 
 public class InvocationResolver {
     public final ArrayList<Pair<MethodInfo, Integer>> a = new ArrayList<Pair<MethodInfo, Integer>>();
+    public boolean resolved = false;
 
     /**
      * Register an invocation instruction to be resolved
-     * @param ins the instruction stream
-     * @param pos the position of the invocation instruction
+     * @param mi the method
+     * @param pos the position of the invocation instruction in the instruction stream of the method
      */
-    public void registerForResolve(MethodInfo ins, int pos) {
-        a.add(new Pair<MethodInfo, Integer>(ins, pos));
+    public void registerForResolve(MethodInfo mi, int pos) {
+        a.add(new Pair<MethodInfo, Integer>(mi, pos));
     }
 
     /**
@@ -53,6 +54,6 @@ public class InvocationResolver {
                 i.opcode = Instruction.OP_HALT;
             }
         }
-        a.clear();
+        resolved = true;
     }
 }
