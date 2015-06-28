@@ -52,9 +52,19 @@ public class Log {
                 w.write(indent.get() + "[" + title + "]: " + msg + "\n");
             } catch (IOException e) {
                 // logging system should never die
-                System.exit(1);
+                exit(1);
             }
         }
+    }
+
+    public static void exit(int r) {
+        try {
+            Log.out.close();
+            Log.err.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.exit(r);
     }
 
     protected static void log(int theLevel, String title, String msg) {

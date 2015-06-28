@@ -25,11 +25,11 @@ public class Settings {
     /**
      * Minimum log level to be printed
      */
-    public static final int logLevel = Log.MODE_DEBUG;
+    public static int logLevel = Log.MODE_DEBUG;
     /**
      * The report mode generates a JSON output
      */
-    public static final boolean enableReportMode = logLevel >= Log.MODE_REPORT;
+    public static boolean enableReportMode = logLevel >= Log.MODE_REPORT;
     /**
      * The Android API Level
      */
