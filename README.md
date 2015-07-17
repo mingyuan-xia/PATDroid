@@ -1,6 +1,6 @@
-# PATDroid (A Program Analysis Toolkit for Android)
+# PATDroid
 <img align="right" src="img/icon-small.png" />
-[![Build Status](https://travis-ci.org/mingyuan-xia/PATDroid.svg?branch=master)](https://travis-ci.org/mingyuan-xia/PATDroid)
+[![Build Status](https://travis-ci.org/mingyuan-xia/PATDroid.svg?branch=master)](https://travis-ci.org/mingyuan-xia/PATDroid)<br>
 PATDroid is a collection of tools and data structures for analyzing Android applications and the system itself. We intend to build it as a common base for developing novel mobile software debugging, refactoring, reliability/security tools. We also collect various resources, links, related papers and tips for various innovative Android program analysis tasks.
 
 ## Packages
@@ -22,6 +22,8 @@ According to our blueprint, we plan to release the following components one by o
 * `patdroid.soot`: my tribute to [Sable's Soot](http://sable.github.io/soot/). I learned a lot from attending Sable's seminars held at [McGill McConnell 2rd floor](https://www.mcgill.ca/maps/mcconnell-engineering-building)
 
 ## Using PATDroid
+We have some get-started tutorials and detailed documentation for each package there in our wiki.
+
 PATDroid uses `Apache License 2.0`. Additionally, if you intend to use it in academic work, please cite our paper:
 ```bibtex
 @inproceedings{appaudit,
