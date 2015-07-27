@@ -155,7 +155,7 @@ public final class MethodInfo {
 	 * @param m another method
 	 * @return true if this method can override the other one
 	 */
-	boolean canOverride(MethodInfo m) {
+	public boolean canOverride(MethodInfo m) {
 		return this == m ||
 			(this.myClass.isConvertibleTo(m.myClass) && hasSameSignature(m));
 	}
@@ -186,5 +186,12 @@ public final class MethodInfo {
 	 */
 	public boolean isAbstract() {
 		return Modifier.isAbstract(modifiers);
+	}
+
+	/**
+	 * @return true if the method is final
+	 */
+	public boolean isFinal() {
+		return Modifier.isFinal(modifiers);
 	}
 }
