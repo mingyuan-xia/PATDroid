@@ -370,7 +370,19 @@ public final class ClassInfo {
 	public ClassInfo getSuperClass() {
 		return getDetails().getSuperClass();
 	}
-	
+
+	/**
+	 * Change the super class of this class to a new super class, the
+	 * derivedClasses will be updated accordingly.
+	 * @param superClass new super class for this class
+	 */
+	public void setSuperClass(ClassInfo superClass) {
+		ClassDetail origDetails = getDetails();
+		origDetails.removeDerivedClasses(this);
+		details = origDetails.changeSuperClass(superClass);
+		details.updateDerivedClasses(this);
+	}
+
 	/**
 	 * @return if this class is an inner class
 	 */

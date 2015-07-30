@@ -20,10 +20,8 @@
 
 package patdroid.core;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.HashMap;
+import java.util.*;
+
 import patdroid.util.Log;
 
 /**
@@ -83,6 +81,22 @@ public final class ClassDetail {
 		for (MethodInfo mi : methods) {
 			this.methods.put(new MethodInfoWrapper(mi), mi);
 		}
+		this.fields = fields;
+		this.staticFields = new HashMap<String, ClassInfo>(staticFields);
+		this.isFrameworkClass = isFrameworkClass;
+	}
+
+	/**
+	 * Only for {@link #changeSuperClass(ClassInfo)}, should not be called by any other class.
+	 */
+	private ClassDetail(ClassInfo superClass, ClassInfo[] interfaces,
+				int accessFlags, HashMap<MethodInfoWrapper, MethodInfo> methods,
+				HashMap<String, ClassInfo> fields,
+				HashMap<String, ClassInfo> staticFields, boolean isFrameworkClass) {
+		this.accessFlags = accessFlags;
+		this.superClass = superClass;
+		this.interfaces = interfaces;
+		this.methods = new HashMap<MethodInfoWrapper, MethodInfo>(methods);
 		this.fields = fields;
 		this.staticFields = new HashMap<String, ClassInfo>(staticFields);
 		this.isFrameworkClass = isFrameworkClass;
@@ -251,6 +265,13 @@ public final class ClassDetail {
 	public final ClassInfo getSuperClass() {
 		return superClass;
 	}
+
+	public ClassDetail changeSuperClass(ClassInfo superClass) {
+		ClassDetail details = new ClassDetail(superClass, interfaces, accessFlags,
+				methods, fields, staticFields, isFrameworkClass);
+		details.derivedClasses = this.derivedClasses;
+		return details;
+	}
 	
 	public final boolean isFrameworkClass() {
 		return this.isFrameworkClass;
@@ -268,6 +289,25 @@ public final class ClassDetail {
 			ClassDetail detail = a.pop();
 			detail.derivedClasses.add(ci);
 			detail.derivedClasses.addAll(derivedClasses);
+			if (detail.superClass != null)
+				a.add(detail.superClass.getDetails());
+			for (ClassInfo i : detail.interfaces) {
+				a.add(i.getDetails());
+			}
+		}
+	}
+
+	public final void removeDerivedClasses(ClassInfo ci) {
+		ArrayDeque<ClassDetail> a = new ArrayDeque<ClassDetail>();
+		if (superClass != null)
+			a.add(superClass.getDetails());
+		for (ClassInfo i : interfaces) {
+			a.add(i.getDetails());
+		}
+		while (!a.isEmpty()) {
+			ClassDetail detail = a.pop();
+			detail.derivedClasses.remove(ci);
+			detail.derivedClasses.removeAll(derivedClasses);
 			if (detail.superClass != null)
 				a.add(detail.superClass.getDetails());
 			for (ClassInfo i : detail.interfaces) {
