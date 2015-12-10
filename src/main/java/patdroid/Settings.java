@@ -25,7 +25,7 @@ public class Settings {
     /**
      * Minimum log level to be printed
      */
-    public static int logLevel = Log.MODE_DEBUG;
+    public static int logLevel = Log.MODE_REPORT;
     /**
      * The report mode generates a JSON output
      */
