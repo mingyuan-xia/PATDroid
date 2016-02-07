@@ -5,15 +5,12 @@ group = 'patdroid'
 sourceCompatibility = 1.6
 version = '1.0'
 
-jar {
-}
-
 repositories {
     mavenCentral()
 }
 
 dependencies {
     testCompile 'junit:junit:4.12'
-    compile files('libs/baksmali-2.0.5.jar')
+    compile group: 'org.smali', name: 'dexlib2', version: '2.1.1'
 }
 
