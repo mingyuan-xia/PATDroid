@@ -411,6 +411,8 @@ public final class ClassInfo {
 	public boolean isFinal() {
 		return isMissing ? false : Modifier.isFinal(getDetails().accessFlags);
 	}
+
+	public boolean isInterface() { return !isMissing && Modifier.isInterface(getDetails().accessFlags); }
 	
 	/**
 	 * Get the default constructor
