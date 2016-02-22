@@ -43,12 +43,14 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
     public void load(ClassInfo ci) throws ClassNotFoundException,
             ExceptionInInitializerError, NoClassDefFoundError
     {
-        for (final ClassDef classDef: dexFile.getClasses()) {
-            if (Dalvik.toCanonicalName(classDef.getType()).equals(ci.fullName)) {
-                ClassDetail detail = translateClassDef(ci, classDef);
-                setDetails(ci, detail);
-                if (translateInstructions) {
-                    resolver.resolveAll();
+        for (DexFile dexFile: dexFiles) {
+            for (final ClassDef classDef : dexFile.getClasses()) {
+                if (Dalvik.toCanonicalName(classDef.getType()).equals(ci.fullName)) {
+                    ClassDetail detail = translateClassDef(ci, classDef);
+                    setDetails(ci, detail);
+                    if (translateInstructions) {
+                        resolver.resolveAll();
+                    }
                 }
             }
         }
@@ -76,43 +78,73 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
      * Parse an apk file and extract all classes, methods, fields and optionally instructions
      */
     public void loadAll() {
-        for (final ClassDef classDef: dexFile.getClasses()) {
-            ClassInfo ci = Dalvik.findOrCreateClass(classDef.getType());
-            ClassDetail detail = translateClassDef(ci, classDef);
-            setDetails(ci, detail);
+        for (DexFile dexFile: dexFiles) {
+            for (final ClassDef classDef : dexFile.getClasses()) {
+                ClassInfo ci = Dalvik.findOrCreateClass(classDef.getType());
+                ClassDetail detail = translateClassDef(ci, classDef);
+                setDetails(ci, detail);
+            }
         }
         if (translateInstructions) {
             resolver.resolveAll();
         }
     }
 
-    private DexFile dexFile;
+    private DexFile[] dexFiles;
     private final boolean translateInstructions;
     private boolean isFramework = false;
 
+    /**
+     * Create a loader that loads everything (including instructions) from an APK file
+     * @param apkFile the APK file
+     */
     public SmaliClassDetailLoader(ZipFile apkFile) {
         this(apkFile, true);
     }
 
+    /**
+     * Create a loader that loads from an APK file (could contain multiple DEX files), optionally loading instructions
+     * @param apkFile the APK file
+     * @param translateInstructions true if the instructions shall be loaded
+     */
     public SmaliClassDetailLoader(ZipFile apkFile, boolean translateInstructions) {
-        final ZipEntry dexEntry = apkFile.getEntry("classes.dex");
+        ArrayList<ZipEntry> dexEntries = new ArrayList<ZipEntry>();
+        dexEntries.add(apkFile.getEntry("classes.dex"));
+        for (int i = 2; i < 99; ++i) {
+            final ZipEntry e = apkFile.getEntry("classes" + i +".dex");
+            if (e != null) {
+                dexEntries.add(e);
+            } else {
+                break;
+            }
+        }
+        final int n = dexEntries.size();
+        if (n == 0) {
+            Log.err("Source apk does not have any dex files");
+        }
+
         this.translateInstructions = translateInstructions;
         this.resolver = translateInstructions ? new InvocationResolver() : null;
-        if (dexEntry == null) {
-            Log.err("Source apk does not have a classes.dex!");
-        }
         final Opcodes opcodes = Opcodes.forApi(Settings.apiLevel);
         try {
-            dexFile = DexBackedDexFile.fromInputStream(opcodes,
-                    new BufferedInputStream(apkFile.getInputStream(dexEntry)));
+            dexFiles = new DexFile[n];
+            for (int i = 0; i < n; ++i) {
+                dexFiles[i] = DexBackedDexFile.fromInputStream(opcodes,
+                        new BufferedInputStream(apkFile.getInputStream(dexEntries.get(i))));
+            }
         } catch (IOException e) {
             Log.err("failed to process the source apk file");
             Log.err(e);
         }
     }
 
+    /**
+     * Create a loader that loads from a single DEX file, optionally loading instructions
+     * @param dexFile the DEX file
+     * @param translateInstructions  true if the instructions shall be loaded
+     */
     public SmaliClassDetailLoader(DexFile dexFile, boolean translateInstructions) {
-        this.dexFile = dexFile;
+        this.dexFiles = new DexFile[] {dexFile};
         this.translateInstructions = translateInstructions;
         this.resolver = translateInstructions ? new InvocationResolver() : null;
     }
