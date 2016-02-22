@@ -1,7 +1,12 @@
 #!/usr/bin/bash
-echo "Input the path to the android SDK"
-read SDK
-for d in $xSDK/*; do dx --dex --core-library --output=$(basename "$d").dex $d/android.jar; done
-echo "aLL api levels:"
-ls -l *.dex
+if [ $# -ne 1 ]; then
+  echo "Usage: gen.sh path/to/android/sdk"
+  exit
+fi
+for d in $1/platforms/*; do
+  p=$(basename "$d")
+  echo "converting $p"
+  dx --dex --core-library --output=$p.dex $d/android.jar
+done
+echo "Done"
 
