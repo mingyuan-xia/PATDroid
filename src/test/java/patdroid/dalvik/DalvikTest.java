@@ -15,9 +15,4 @@ public class DalvikTest {
         Assert.assertEquals("[Ljava.lang.Object;", Dalvik.toCanonicalName("[Ljava/lang/Object;"));
         Assert.assertEquals("[[[[[[[I", Dalvik.toCanonicalName("[[[[[[[I"));
     }
-    @Test
-    public void testFindClasses() {
-        // TODO: findOrCreateClass
-
-    }
 }

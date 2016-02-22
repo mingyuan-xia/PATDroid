@@ -20,7 +20,7 @@ Here is a one-sentence description for each package. Find the detailed usage tut
 * [`patdroid.smali`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-smali): using [SMALI](https://code.google.com/p/smali/) to extract classes, methods, fields and instructions from an APK 
 
 According to our blueprint, we plan to release the following components one by one in the near future:
-~~* `patdroid.dex2jar`: using [dex2jar](https://github.com/pxb1988/dex2jar) to extract classes, methods, fields and instructions from an APK~~
+* ~~`patdroid.dex2jar`: using [dex2jar](https://github.com/pxb1988/dex2jar) to extract classes, methods, fields and instructions from an APK~~
 * `patdroid.manifest`: the model for AndroidManifest.xml and Android components such as activity, service, broadcast receivers
 * `patdroid.taint`: sources, sinks and taint propagation support for taint analysis
 * `patdroid.lifecycle`: modelling the life cycles for important Android components

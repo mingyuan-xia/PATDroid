@@ -33,11 +33,11 @@ public class Settings {
      */
     public static boolean enableReportMode = logLevel >= Log.MODE_REPORT;
     /**
-     * The Android API Level
+     * The Android API Level, default 19 (Android 4.4 KitKat)
      */
     public static int apiLevel = 19;
     /**
-     * The path to a folder storing all framework classes dex files
+     * The folder storing all framework classes dex files
      */
     public static final File frameworkClassesFolder = new File("apilevels");
 }
