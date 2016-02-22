@@ -21,6 +21,8 @@ package patdroid;
 
 import patdroid.util.Log;
 
+import java.io.File;
+
 public class Settings {
     /**
      * Minimum log level to be printed
@@ -33,5 +35,9 @@ public class Settings {
     /**
      * The Android API Level
      */
-    public static int apiLevel = 15;
+    public static int apiLevel = 19;
+    /**
+     * The path to a folder storing all framework classes dex files
+     */
+    public static final File frameworkClassesFolder = new File("apilevels");
 }

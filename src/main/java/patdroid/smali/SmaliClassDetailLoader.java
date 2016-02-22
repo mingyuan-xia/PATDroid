@@ -1,15 +1,18 @@
 package patdroid.smali;
 
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.jf.dexlib2.AccessFlags;
+import org.jf.dexlib2.DexFileFactory;
 import org.jf.dexlib2.Opcodes;
 import org.jf.dexlib2.dexbacked.DexBackedDexFile;
 import org.jf.dexlib2.iface.ClassDef;
@@ -31,17 +34,43 @@ import patdroid.dalvik.Dalvik;
 
 /**
  * Load classes, methods, fields and instructions from an APK file with SMALI
- * https://code.google.com/p/smali/
+ * https://github.com/JesusFreke/smali
  */
 public class SmaliClassDetailLoader extends ClassDetailLoader {
-    private static final ClassNotFoundException x_x =
-            new ClassNotFoundException("the smali ClassDetail loader does not load class one by one, use loadAll()");
     public final InvocationResolver resolver;
 
     @Override
     public void load(ClassInfo ci) throws ClassNotFoundException,
             ExceptionInInitializerError, NoClassDefFoundError
-    { throw x_x; }
+    {
+        for (final ClassDef classDef: dexFile.getClasses()) {
+            if (Dalvik.toCanonicalName(classDef.getType()).equals(ci.fullName)) {
+                ClassDetail detail = translateClassDef(ci, classDef);
+                setDetails(ci, detail);
+                if (translateInstructions) {
+                    resolver.resolveAll();
+                }
+            }
+        }
+        throw new ClassNotFoundException("" + ci.fullName + " not found in the dex file");
+    }
+
+    public static SmaliClassDetailLoader getFrameworkClassLoader(int apiLevel) {
+        File f = new File(Settings.frameworkClassesFolder, "android-" + apiLevel + ".dex");
+        if (!f.exists())
+            return null;
+        DexFile dex = null;
+        try {
+            dex = DexFileFactory.loadDexFile(f, Settings.apiLevel);
+        } catch (IOException e) {
+            Log.err("failed to load framework classes");
+            Log.err(e);
+            return null;
+        }
+        SmaliClassDetailLoader ldr = new SmaliClassDetailLoader(dex, false);
+        ldr.isFramework = true;
+        return ldr;
+    }
 
     /**
      * Parse an apk file and extract all classes, methods, fields and optionally instructions
@@ -59,6 +88,7 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
 
     private DexFile dexFile;
     private final boolean translateInstructions;
+    private boolean isFramework = false;
 
     public SmaliClassDetailLoader(ZipFile apkFile) {
         this(apkFile, true);
@@ -71,7 +101,7 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         if (dexEntry == null) {
             Log.err("Source apk does not have a classes.dex!");
         }
-        final Opcodes opcodes = new Opcodes(Settings.apiLevel, true);
+        final Opcodes opcodes = Opcodes.forApi(Settings.apiLevel);
         try {
             dexFile = DexBackedDexFile.fromInputStream(opcodes,
                     new BufferedInputStream(apkFile.getInputStream(dexEntry)));
@@ -89,7 +119,12 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
 
     private ClassDetail translateClassDef(
             ClassInfo ci, ClassDef classDef) {
-        final ClassInfo superClass = Dalvik.findOrCreateClass(classDef.getSuperclass());
+        ClassInfo superClass;
+        if (classDef.getSuperclass() == null) {
+            superClass = null; // for java.lang.Object
+        } else {
+            superClass = Dalvik.findOrCreateClass(classDef.getSuperclass());
+        }
         final ClassInfo[] interfaces = findOrCreateClass(classDef.getInterfaces());
         final int accessFlags = translateAccessFlags(classDef.getAccessFlags());
         final MethodInfo[] methods = translateMethods(ci,
@@ -103,7 +138,7 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         final HashMap<String, ClassInfo> staticFields = translateFields(
                 classDef.getStaticFields());
         return createDetail(superClass, interfaces,
-                accessFlags, methods, fields, staticFields, false);
+                accessFlags, methods, fields, staticFields, isFramework);
     }
 
     private MethodInfo translateMethod(ClassInfo ci, Method method) {

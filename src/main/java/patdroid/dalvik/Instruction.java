@@ -146,27 +146,29 @@ public final class Instruction {
 
 	@Override
 	public String toString() {
-		String s = "<";
-		s += opname[opcode];
+		final StringBuilder s = new StringBuilder();
+		s.append("<");
+		s.append(opname[opcode]);
 		if (opcode_aux != OP_NOP) {
-			s += "," + opaux_name[opcode_aux];
+			s.append(",").append(opaux_name[opcode_aux]);
 		}
 		if (rdst != -1) {
-			s += ",dst=r" + rdst;
+			s.append(",dst=r").append(rdst);
 		}
 		if (r0 != -1) {
-			s += ",r0=r" + r0;
+			s.append(",r0=r").append(r0);
 		}
 		if (r1 != -1) {
-			s += ",r1=r" + r1;
+			s.append(",r1=r").append(r1);
 		}
 		if (type != null) {
-			s += ",type=" + type.toString();
+			s.append(",type=").append(type.toString());
 		}
 		if (extra != null) {
-			s += ",extra=" + extraToString();
+			s.append(",extra=").append(extraToString());
 		}
-		return s += ">";
+		s.append(">");
+		return s.toString();
 	}
 
 	private String extraToString() {

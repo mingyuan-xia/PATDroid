@@ -3,6 +3,13 @@
 [![Build Status](https://travis-ci.org/mingyuan-xia/PATDroid.svg?branch=master)](https://travis-ci.org/mingyuan-xia/PATDroid)<br>
 PATDroid is a collection of tools and data structures for analyzing Android applications and the system itself. We intend to build it as a common base for developing novel mobile software debugging, refactoring, reliability/security tools. We also collect various resources, links, related papers and tips for various innovative Android program analysis tasks.
 
+## Changelog
+* Now the project is in alpha stage. We are now working on several directions to hit our first release
+  * Documentation, tutorial, IDE support
+  * Maven central support
+  * flexible API level loading
+  * let us know what you are expecting :-)
+
 ## Packages
 Here is a one-sentence description for each package. Find the detailed usage tutorials on our wiki by clicking on the package name. PATDroid requires Java6. It goes well with Oracle/OpenJDK 1.6, 1.7, Dalvik (Yes, you can run it on a smartphone). We provide gradle, Intellij IDEA and Eclipse support for the project.
 
@@ -13,9 +20,8 @@ Here is a one-sentence description for each package. Find the detailed usage tut
 * [`patdroid.smali`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-smali): using [SMALI](https://code.google.com/p/smali/) to extract classes, methods, fields and instructions from an APK 
 
 According to our blueprint, we plan to release the following components one by one in the near future:
-* `patdroid.dex2jar`: using [dex2jar](https://github.com/pxb1988/dex2jar) to extract classes, methods, fields and instructions from an APK
+~~* `patdroid.dex2jar`: using [dex2jar](https://github.com/pxb1988/dex2jar) to extract classes, methods, fields and instructions from an APK~~
 * `patdroid.manifest`: the model for AndroidManifest.xml and Android components such as activity, service, broadcast receivers
-* `patdroid.sdk`: modeling different Android API levels
 * `patdroid.taint`: sources, sinks and taint propagation support for taint analysis
 * `patdroid.lifecycle`: modelling the life cycles for important Android components
 * `patdroid.layout`: understanding layout.xml
@@ -45,7 +51,7 @@ Overall, we try to make the entire project
 1. concise (with fewer abstractions as possible such that users wont feel like searching a needle in the ocean) 
 2. properly documented (javadoc, and wiki tutorial)
 3. loosely coupled (packages trying to be self-contained)
-4. efficient (graduate students need life with bf/gf not with computers)
+4. efficient (graduate students need life with bf/gf not waiting for computers to complete analyses)
 5. look like good code 
 
 If you want to contribute, make sure you follow these traditions and feel free to submit a pull request.
@@ -53,4 +59,4 @@ Note that quick-and-dirty patches require many efforts to make them ready, and t
 I am always open to suggestions and willing to hear interesting projects that make use of PATDroid.
 Right now, several exciting research projects across McGill University and Shanghai Jiao Tong University are using PATDroid. We will update links to them soon.
 
-* Contact: [email](mailto:ken.mingyuan@gmail.com), new issues, pull requests.
+* Contact: [email](mailto:mxia@mxia.me), new issues, pull requests.
