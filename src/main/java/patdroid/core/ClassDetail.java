@@ -57,6 +57,11 @@ public final class ClassDetail {
 	private final HashMap<String, ClassInfo> fields;
 	private final HashMap<String, ClassInfo> staticFields;
 	private final boolean isFrameworkClass;
+	/**
+	 * A list of classes inherit this class.
+	 * Note that derivedClasses only covers loaded classes.
+	 * Use with care!
+	 */
 	public ArrayList<ClassInfo> derivedClasses = new ArrayList<ClassInfo>();
 	public final int accessFlags;
 	/**
@@ -64,7 +69,7 @@ public final class ClassDetail {
 	 * Only a ClassDetailLoader could construct a ClassDetail
 	 * @param superClass its base class
 	 * @param interfaces interfaces
-	 * @param accessFlags 
+	 * @param accessFlags the access flags on the class
 	 * @param methods methods, stored in a name-type map
 	 * @param fields non-static fields, stored in a name-type map
 	 * @param staticFields static fields, stored in a name-type map 
@@ -101,7 +106,15 @@ public final class ClassDetail {
 		this.staticFields = new HashMap<String, ClassInfo>(staticFields);
 		this.isFrameworkClass = isFrameworkClass;
 	}
-	
+
+	/**
+	 *
+	 * @return all methods in the class
+     */
+	public Collection<MethodInfo> getAllMethods() {
+		return methods.values();
+	}
+
 	/**
 	 * Get the type of a non-static field. This functions will look into the base class.
 	 * @param fieldName the field name
@@ -227,7 +240,6 @@ public final class ClassDetail {
 	 * @return The real methods
 	 */
 	public MethodInfo[] findMethodsHere(String name) {
-		
 		ArrayList<MethodInfo> result = new ArrayList<MethodInfo>();
 		for (MethodInfo m : methods.values()) {
 			if (m.name.equals(name)) {
@@ -278,7 +290,6 @@ public final class ClassDetail {
 	}
 
 	public final void updateDerivedClasses(ClassInfo ci) {
-		// TODO derivedClasses only covers loaded classes
 		ArrayDeque<ClassDetail> a = new ArrayDeque<ClassDetail>();
 		if (superClass != null)
 			a.add(superClass.getDetails());

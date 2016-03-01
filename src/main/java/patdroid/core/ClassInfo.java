@@ -21,10 +21,7 @@
 package patdroid.core;
 
 import java.lang.reflect.Modifier;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import patdroid.util.Log;
 
@@ -83,6 +80,10 @@ public final class ClassInfo {
 	private ClassInfo(String fullName) {
 		this.fullName = fullName;
 		classes.put(fullName, this);
+	}
+
+	public static Collection<ClassInfo> getAllClasses() {
+		return classes.values();
 	}
 
 	/**
@@ -209,7 +210,16 @@ public final class ClassInfo {
 	public HashMap<String, ClassInfo> getAllStaticFieldsHere() {
 		return (isMissing ? null : getDetails().getAllStaticFieldsHere());
 	}
-	
+
+	/**
+	 *
+	 * @return all methods in the class
+     */
+	public Collection<MethodInfo> getAllMethods() {
+		if (isMissing) return null;
+		return getDetails().getAllMethods();
+	}
+
 	/**
 	 * Find a method declared in this class
 	 * <p>
