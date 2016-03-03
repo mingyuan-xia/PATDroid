@@ -1,9 +1,10 @@
 apply plugin: 'java'
-apply plugin: 'eclipse'
+apply plugin: 'maven'
 
-group = 'patdroid'
+group = 'me.mxia'
+archivesBaseName = 'patdroid'
 sourceCompatibility = 1.6
-version = '1.0'
+version = '1.0.0rc'
 
 repositories {
     mavenCentral()
@@ -15,3 +16,59 @@ dependencies {
     runtime "org.smali:smali:2.1.1"
 }
 
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+uploadArchives {
+  repositories {
+    mavenDeployer {
+
+      repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+        authentication(userName: ossrhUsername, password: ossrhPassword)
+      }
+
+      snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+        authentication(userName: ossrhUsername, password: ossrhPassword)
+      }
+
+      pom.project {
+        name 'PATDroid'
+        packaging 'jar'
+        description 'A Program Analysis Toolkit for Android'
+        url 'https://github.com/mingyuan-xia/PATDroid'
+
+        scm {
+          connection 'scm:git:git@github.com:mingyuan-xia/PATDroid.git'
+          developerConnection 'scm:git:git@github.com:mingyuan-xia/PATDroid.git'
+          url 'https://github.com/mingyuan-xia/PATDroid'
+        }
+
+        licenses {
+          license {
+            name 'The Apache License, Version 2.0'
+            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+          }
+        }
+
+        developers {
+          developer {
+            id 'mingyuan-xia'
+            name 'Mingyuan Xia'
+            email 'mxia@mxia.me'
+          }
+        }
+      }
+    }
+  }
+}
