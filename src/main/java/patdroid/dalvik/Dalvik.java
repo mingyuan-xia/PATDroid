@@ -7,16 +7,16 @@ import patdroid.util.Log;
  * Provide common support for dalvik VM
  * <p>
  * The class name convention difference (Java vs. Dalvik):
- * <table>
+ * <table summary="">
  * <thead>
- * 	<tr><th>Case</th><th>Java</th><th>Dalvik</th></tr>
+ * <tr><th>Case</th><th>Java</th><th>Dalvik</th></tr>
  * </thead>
  * <tbody>
- * </tbody>
  * <tr><td>String.class.getName()</td><td>"java.lang.String"</td><td>"Ljava/lang/String;"</td></tr>
  * <tr><td>byte.class.getName()</td><td>"byte"</td><td>"B"</td></tr>
  * <tr><td>(new Object[3]).getClass().getName()</td><td>"[Ljava.lang.Object;"</td><td>"[Ljava/lang/Object;"</td></tr>
  * <tr><td>(new int[3][4][5][6][7][8][9]).getClass().getName()</td><td>"[[[[[[[I"</td><td>"[[[[[[[I"</td></tr>
+ * </tbody>
  * </table>
  */
 public class Dalvik {

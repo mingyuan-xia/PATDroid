@@ -32,8 +32,8 @@ import java.util.Arrays;
  * and changeable info such as local variables, instructions
  * and analysis-specific tags
  * </p>
- * <p> Constructors have special name "<init>" </p>
- * <p> A static initializer have special name "<clinit>" </p>
+ * <p> Constructors have special name "&lt;init&gt;" </p>
+ * <p> A static initializer have special name "&lt;clinit&gt;" </p>
  */
 public final class MethodInfo {
 	public static final String STATIC_INITIALIZER = "<clinit>";
