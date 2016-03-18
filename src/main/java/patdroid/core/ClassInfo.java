@@ -419,10 +419,19 @@ public final class ClassInfo {
 	 * @return if the class is final
 	 */
 	public boolean isFinal() {
-		return isMissing ? false : Modifier.isFinal(getDetails().accessFlags);
+		return !isMissing && Modifier.isFinal(getDetails().accessFlags);
 	}
 
-	public boolean isInterface() { return !isMissing && Modifier.isInterface(getDetails().accessFlags); }
+	/**
+	 * @return if the class is an interface
+	 */
+	public boolean isInterface() {
+		return !isMissing && Modifier.isInterface(getDetails().accessFlags);
+	}
+
+	public boolean isAbstract() {
+		return !isMissing && Modifier.isAbstract(getDetails().accessFlags);
+	}
 	
 	/**
 	 * Get the default constructor
