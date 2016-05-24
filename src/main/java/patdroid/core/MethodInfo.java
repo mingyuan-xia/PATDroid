@@ -66,6 +66,10 @@ public final class MethodInfo {
 	 */
 	public Instruction[] insns;
 	/**
+	 * Try blocks
+	 */
+	public TryBlockInfo[] tbs;
+	/**
 	 * Anything that should be attached to the method
 	 */
 	public Object extra;

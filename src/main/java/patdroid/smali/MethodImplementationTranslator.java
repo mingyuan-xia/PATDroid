@@ -30,17 +30,16 @@ import java.util.List;
 import java.util.Map;
 
 import org.jf.dexlib2.Opcode;
+import org.jf.dexlib2.iface.ExceptionHandler;
 import org.jf.dexlib2.iface.MethodImplementation;
+import org.jf.dexlib2.iface.TryBlock;
 import org.jf.dexlib2.iface.instruction.*;
 import org.jf.dexlib2.iface.instruction.formats.*;
 import org.jf.dexlib2.iface.reference.*;
 
-import patdroid.core.ClassInfo;
-import patdroid.core.FieldInfo;
+import patdroid.core.*;
 import patdroid.dalvik.Dalvik;
 import patdroid.dalvik.Instruction;
-import patdroid.core.MethodInfo;
-import patdroid.core.PrimitiveInfo;
 import patdroid.dalvik.InvocationResolver;
 import patdroid.util.Log;
 import patdroid.util.Pair;
@@ -1266,7 +1265,6 @@ public final class MethodImplementationTranslator {
 	public void translate(final MethodInfo mi, final MethodImplementation impl) {
 		this.mi = mi;
 		currentCodeAddress = 0;
-
 		final ArrayList<Instruction> insns = new ArrayList<Instruction>();
 		
 		{
@@ -1725,5 +1723,45 @@ public final class MethodImplementationTranslator {
 		Log.doAssert(unresolvedInsns.isEmpty(), "unresolved instruction");
 		Log.doAssert(payloadDefers.isEmpty(), "unresolved payload");
 		mi.insns = insns.toArray(new Instruction[insns.size()]);
+
+		// try catch blocks
+        ArrayList<TryBlockInfo> tbis = new ArrayList<TryBlockInfo>();
+		for (TryBlock tb: impl.getTryBlocks()) {
+            final TryBlockInfo tbi = new TryBlockInfo();
+            final int start_addr = tb.getStartCodeAddress();
+            final int end_addr = start_addr + tb.getCodeUnitCount();
+            tbi.startInsnIndex = addressToIndex.get(start_addr);
+            if (addressToIndex.containsKey(end_addr)) {
+                tbi.endInsnIndex = addressToIndex.get(end_addr);
+            } else {
+                // the last insn could be partially covered
+                int next_insn_addr = Integer.MAX_VALUE;
+                for (int addr: addressToIndex.keySet()) {
+                    if (addr > end_addr) {
+                        next_insn_addr = Math.min(next_insn_addr, addr);
+                    }
+                }
+                tbi.endInsnIndex = next_insn_addr;
+            }
+			List ehs = tb.getExceptionHandlers();
+            ArrayList<TryBlockInfo.ExceptionHandler> l = new ArrayList<TryBlockInfo.ExceptionHandler>();
+            for (Object i : ehs) {
+                final ExceptionHandler eh = (ExceptionHandler) i;
+                final int handler_start_addr = eh.getHandlerCodeAddress();
+                ClassInfo exception_type;
+                if (eh.getExceptionType() == null) {
+                    exception_type = null; // the catch-all handler
+                } else {
+                    exception_type = Dalvik.findOrCreateClass(eh.getExceptionType());
+                }
+                final TryBlockInfo.ExceptionHandler translated = new TryBlockInfo.ExceptionHandler();
+                translated.exceptionType = exception_type;
+                translated.handlerInsnIndex = addressToIndex.get(handler_start_addr);
+                l.add(translated);
+            }
+            tbi.handlers = l.toArray(new TryBlockInfo.ExceptionHandler[l.size()]);
+            tbis.add(tbi);
+		}
+        mi.tbs = tbis.toArray(new TryBlockInfo[tbis.size()]);
 	}
 }
