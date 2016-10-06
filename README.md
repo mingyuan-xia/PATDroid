@@ -1,36 +1,33 @@
-# PATDroid
+# PATDroid [![Build Status](https://travis-ci.org/mingyuan-xia/PATDroid.svg?branch=master)](https://travis-ci.org/mingyuan-xia/PATDroid)
 <img align="right" src="img/icon-small.png" />
-[![Build Status](https://travis-ci.org/mingyuan-xia/PATDroid.svg?branch=master)](https://travis-ci.org/mingyuan-xia/PATDroid)<br>
 PATDroid is a collection of tools and data structures for analyzing Android applications and the system itself. We intend to build it as a common base for developing novel mobile software debugging, refactoring, reliability/security tools. We also collect various resources, links, related papers and tips for various innovative Android program analysis tasks.
 
 ## Changelog
-* Now the project is in alpha stage. We are now working on several directions to hit our first release
+* Now the project is in alpha stage. We are now working on several aspects to hit our first release
   * Documentation, tutorial, IDE support
   * Maven central support
   * flexible API level loading
   * let us know what you are expecting :-)
 
 ## Packages
-Here is a one-sentence description for each package. Find the detailed usage tutorials on our wiki by clicking on the package name. PATDroid requires Java6. It goes well with Oracle/OpenJDK 1.6, 1.7, Dalvik (Yes, you can run it on a smartphone). We provide gradle, Intellij IDEA and Eclipse support for the project.
+Here is a one-sentence description for each package. Find the detailed usage tutorials on our wiki by clicking on the package name. Most public APIs are Java-doced. PATDroid requires Java6+. It goes well with Oracle/OpenJDK 1.6, 1.7, Dalvik (Yes, you can run it on a smartphone). We provide gradle, Intellij IDEA and Eclipse support for the project.
 
-* [`patdroid.core`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-core): provide abstractions for method, class, field, and primitive Java type values
-* [`patdroid.permission`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-permission): specify what Android permissions are needed by every Android APIs
-* [`patdroid.fs`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-fs): an emulated Android file system
+* [`patdroid.core`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-core): provide abstractions for methods, classes, fields, and primitive Java type values
+* [`patdroid.permission`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-permission): specify what Android permissions are needed for every Android APIs
+* [`patdroid.fs`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-fs): an emulated and simplified Android file system
 * [`patdroid.dalvik`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-dalvik): Android Dalvik JVM instructions and representations
-* [`patdroid.smali`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-smali): using [SMALI](https://code.google.com/p/smali/) to extract classes, methods, fields and instructions from an APK 
+* [`patdroid.smali`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-smali): using [SMALI](https://github.com/JesusFreke/smali) to extract classes, methods, fields and instructions from an APK 
 
 According to our blueprint, we plan to release the following components one by one in the near future:
 * ~~`patdroid.dex2jar`: using [dex2jar](https://github.com/pxb1988/dex2jar) to extract classes, methods, fields and instructions from an APK~~
 * `patdroid.manifest`: the model for AndroidManifest.xml and Android components such as activity, service, broadcast receivers
 * `patdroid.taint`: sources, sinks and taint propagation support for taint analysis
-* `patdroid.lifecycle`: modelling the life cycles for important Android components
-* `patdroid.layout`: understanding layout.xml
+* `patdroid.lifecycle`: modelling the life cycle methods for Android components (Activity, Service, etc)
+* `patdroid.layout`: parsing and manipulating layout.xml
 * `patdroid.soot`: my tribute to [Sable's Soot](http://sable.github.io/soot/). I learned a lot from attending Sable's seminars held at [McGill McConnell 2rd floor](https://www.mcgill.ca/maps/mcconnell-engineering-building)
 
 ## Using PATDroid
-We have some get-started tutorials and detailed documentation for each package there in our wiki.
-
-PATDroid uses `Apache License 2.0`. Additionally, if you intend to use it in academic work, please cite our paper:
+PATDroid uses `Apache License 2.0`. The is the bib entry in case you want to use PATDroid in academic publications:
 ```bibtex
 @inproceedings{appaudit,
  author = {Mingyuan Xia and Lu Gong and Yuanhao Lyu and Zhengwei Qi and Xue Liu},
@@ -43,7 +40,7 @@ PATDroid uses `Apache License 2.0`. Additionally, if you intend to use it in aca
 ```
 
 ## History and Philosophy
-PATDroid was part of [AppAudit](http://appaudit.io), which is a security tool that checks if an Android app leaks personal data.
+PATDroid was part of [AppAudit](http://appaudit.io), which is a security tool that checks if an Android app leaks sensitive user data.
 You can find out more details from our [S&P'15 paper](http://www.ieee-security.org/TC/SP2015/papers-archived/6949a899.pdf).
 We make part of AppAudit public to be useful to researchers and developers.
 Overall, we try to make the entire project
