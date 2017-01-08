@@ -58,7 +58,7 @@ public class EmulatedFS {
 
     /**
      * Create an emulated Android file system and load the apk content
-     * @param apkFile
+     * @param apkFile the apk file
      */
     public EmulatedFS(ZipFile apkFile) {
         this();
@@ -69,8 +69,8 @@ public class EmulatedFS {
      * Load an apk file to the emulated file system.
      * By spec, the apk file would be located at /data/app/[package_name].apk;
      * Its data would be accessible at /data/data/[package_name]/;
-     * @param pkgName
-     * @param apkFile
+     * @param pkgName the package name of the apk
+     * @param apkFile the apk file
      */
     public void loadApk(String pkgName, ZipFile apkFile) {
         apkAssets = new ZipBackedNode(apkFile, "assets/");

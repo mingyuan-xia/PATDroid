@@ -32,8 +32,8 @@ import java.util.Arrays;
  * and changeable info such as local variables, instructions
  * and analysis-specific tags
  * </p>
- * <p> Constructors have special name "&lt;init&gt;" </p>
- * <p> A static initializer have special name "&lt;clinit&gt;" </p>
+ * <p> Constructors have a special name "&lt;init&gt;" </p>
+ * <p> The static initializer has a special name "&lt;clinit&gt;" </p>
  */
 public final class MethodInfo {
 	public static final String STATIC_INITIALIZER = "<clinit>";
@@ -103,7 +103,15 @@ public final class MethodInfo {
 			ClassInfo[] paramTypes, int accessFlags) {
 		return new MethodInfo(null, name, returnType, paramTypes, accessFlags);
 	}
-	
+
+	/**
+	 *
+	 * @return the method prototype of the method
+	 */
+	public MethodInfo getPrototype() {
+		return MethodInfo.makePrototype(this.name, this.returnType, this.paramTypes, this.modifiers);
+	}
+
 	/**
 	 * Compute the hash of the function signature. So if two functions have same
 	 * signature, their signature hashes should be equal.

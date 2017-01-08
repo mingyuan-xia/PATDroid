@@ -5,7 +5,7 @@ apply plugin: 'application'
 group = 'me.mxia'
 archivesBaseName = 'patdroid'
 sourceCompatibility = 1.6
-version = '1.0.0rc'
+version = '1.0.0-SNAPSHOT'
 mainClassName = "patdroid.Main"
 
 repositories {

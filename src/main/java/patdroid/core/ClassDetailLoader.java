@@ -45,6 +45,7 @@ public class ClassDetailLoader {
      * Set the details of the class, usually used only by class loader
      * <p>
      * <b>Note:</b> this might start class loading if the class is not loaded yet
+     * @param ci the owner class
      * @param details the detailed info about the class
      */
     protected static void setDetails(ClassInfo ci, ClassDetail details) {

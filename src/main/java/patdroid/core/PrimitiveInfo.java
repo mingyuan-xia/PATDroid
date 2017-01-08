@@ -102,7 +102,8 @@ public final class PrimitiveInfo {
 	/**
 	 * Parse a Java built-in object
 	 * 
-	 * @param o
+	 * @param o an arbitrary object of primitive boxing type
+	 * @return a PrimitiveInfo
 	 */
 	public static PrimitiveInfo fromObject(Object o) {
 		if (o instanceof Integer) {
