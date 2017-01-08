@@ -5,7 +5,7 @@ apply plugin: 'application'
 group = 'me.mxia'
 archivesBaseName = 'patdroid'
 sourceCompatibility = 1.6
-version = '1.0.0-SNAPSHOT'
+version = '1.0.0'
 mainClassName = "patdroid.Main"
 
 repositories {
@@ -36,11 +36,11 @@ uploadArchives {
     mavenDeployer {
 
       repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-        authentication(userName: hasProperty('ossrhUsername')?ossrhUsername:'', password: hasProperty('ossrhPassword')?ossrhPassword:'')
+        authentication(userName: ossrhUsername, password: ossrhPassword)
       }
 
       snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-        authentication(userName: hasProperty('ossrhUsername')?ossrhUsername:'', password: hasProperty('ossrhPassword')?ossrhPassword:'')
+        authentication(userName: ossrhUsername, password: ossrhPassword)
       }
 
       pom.project {
