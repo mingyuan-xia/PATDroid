@@ -145,6 +145,7 @@ public final class ClassInfo {
 	
 	/**
 	 * Dump the class hierarchy
+	 * @return a String containing all the classes
 	 */
 	public static String dumpClassHierarchy() {
 		return classes.keySet().toString();

@@ -13,6 +13,7 @@ public class Main {
      * An example using the PATDroid APIs to print all classes
      * and containing methods in an APK file
      * @param args The first arg should be the path/to/apk
+     * @throws IOException when the file is not OK
      */
     public static void main(String[] args) throws IOException {
         if (args.length <= 0) {

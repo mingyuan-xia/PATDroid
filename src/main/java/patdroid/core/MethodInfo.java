@@ -143,17 +143,7 @@ public final class MethodInfo {
 		}
 		return true;
 	}
-	
-	/**
-	 * Test if two functions have the same prototype
-	 * @return true if two functions have the same prototype
-	 */
-	public boolean hasSameSignature(String name, ClassInfo returnType,
-			ClassInfo... paramTypes) {
-		return hasSameSignature(
-				MethodInfo.makePrototype(name, returnType, paramTypes, 0));
-	}
-	
+
 	@Override
 	public String toString() {
 		String s = (myClass == null ? "" : myClass.toString());
