@@ -1,11 +1,15 @@
 # PATDroid [![Build Status](https://travis-ci.org/mingyuan-xia/PATDroid.svg?branch=master)](https://travis-ci.org/mingyuan-xia/PATDroid)
 <img align="right" src="img/icon-small.png" />
 PATDroid is a collection of tools and data structures for analyzing Android applications and the system itself. We intend to build it as a common base for developing novel mobile software debugging, refactoring, reliability/security tools. We also collect various resources, links, related papers and tips for various innovative Android program analysis tasks.
+```groovy
+dependencies {
+    compile group: 'mxia.me', name: 'patdroid', version: '1.0.0'
+}
+```
 
 ## Changelog
 * Now the project is in alpha stage. We are now working on several aspects to hit our first release
   * Documentation, tutorial, IDE support
-  * Maven central support
   * flexible API level loading
   * let us know what you are expecting :-)
 
@@ -26,18 +30,6 @@ According to our blueprint, we plan to release the following components one by o
 * `patdroid.layout`: parsing and manipulating layout.xml
 * `patdroid.soot`: my tribute to [Sable's Soot](http://sable.github.io/soot/). I learned a lot from attending Sable's seminars held at [McGill McConnell 2rd floor](https://www.mcgill.ca/maps/mcconnell-engineering-building)
 
-## Using PATDroid
-PATDroid uses `Apache License 2.0`. The is the bib entry in case you want to use PATDroid in academic publications:
-```bibtex
-@inproceedings{appaudit,
- author = {Mingyuan Xia and Lu Gong and Yuanhao Lyu and Zhengwei Qi and Xue Liu},
- title = {Effective Real-time Android Application Auditing},
- booktitle = {Proceedings of the 2015 IEEE Symposium on Security and Privacy},
- series = {SP '15},
- year = {2015},
- publisher = {IEEE Computer Society},
-} 
-```
 
 ## History and Philosophy
 PATDroid was part of [AppAudit](http://appaudit.io), which is a security tool that checks if an Android app leaks sensitive user data.
@@ -57,3 +49,4 @@ I am always open to suggestions and willing to hear interesting projects that ma
 Right now, several exciting research projects across McGill University and Shanghai Jiao Tong University are using PATDroid. We will update links to them soon.
 
 * Contact: [email](mailto:mxia@mxia.me), new issues, pull requests.
+* PATDroid uses `Apache License 2.0`. If you would like to use PATDroid in academic publications, bibtex can be found [here](http://dl.acm.org/citation.cfm?id=2867539.2867691).
