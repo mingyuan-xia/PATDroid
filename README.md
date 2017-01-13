@@ -1,20 +1,14 @@
 # PATDroid [![Build Status](https://travis-ci.org/mingyuan-xia/PATDroid.svg?branch=master)](https://travis-ci.org/mingyuan-xia/PATDroid)
 <img align="right" src="img/icon-small.png" />
-PATDroid is a collection of tools and data structures for analyzing Android applications and the system itself. We intend to build it as a common base for developing novel mobile software debugging, refactoring, reliability/security tools. We also collect various resources, links, related papers and tips for various innovative Android program analysis tasks.
+PATDroid is a collection of tools and data structures for analyzing Android applications and the system itself. We intend to build it as a common base for developing novel mobile software debugging, refactoring, reverse engineering tools.
 ```groovy
 dependencies {
     compile group: 'mxia.me', name: 'patdroid', version: '1.0.0'
 }
 ```
 
-## Changelog
-* Now the project is in alpha stage. We are now working on several aspects to hit our first release
-  * Documentation, tutorial, IDE support
-  * flexible API level loading
-  * let us know what you are expecting :-)
-
 ## Packages
-Here is a one-sentence description for each package. Find the detailed usage tutorials on our wiki by clicking on the package name. Most public APIs are Java-doced. PATDroid requires Java6+. It goes well with Oracle/OpenJDK 1.6, 1.7, Dalvik (Yes, you can run it on a smartphone). We provide gradle, Intellij IDEA and Eclipse support for the project.
+Here is a one-sentence description for each package. Find the detailed usage tutorials on our wiki by clicking on the package name. Most public APIs are Java-doced. PATDroid requires Java6+. It goes well with Oracle/OpenJDK 1.6, 1.7, Dalvik (Yes, you can run it on a smartphone). We provide gradle, Intellij IDEA and Eclipse support for the project. Gradle is default.
 
 * [`patdroid.core`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-core): provide abstractions for methods, classes, fields, and primitive Java type values
 * [`patdroid.permission`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-permission): specify what Android permissions are needed for every Android APIs
