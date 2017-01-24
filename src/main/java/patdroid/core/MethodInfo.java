@@ -22,6 +22,7 @@ package patdroid.core;
 
 import patdroid.dalvik.Instruction;
 
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 
@@ -142,6 +143,29 @@ public final class MethodInfo {
 				return false;
 		}
 		return true;
+	}
+
+	/**
+	 * Get the method in the superclass/interfaces that is overridden by the current method.
+	 * If the current method is non-virtual, the result will be null.
+	 * If the current method is not overriding any method from its parent classes, the result will
+	 * be null too.
+	 * @return the overriding method or null if none
+	 */
+	public MethodInfo getOverridingMethod() {
+		if (this.isConstructor() || this.isStatic()) return null;
+		final MethodInfo mproto = this.getPrototype();
+		final ClassInfo superClass = this.myClass.getSuperClass();
+		MethodInfo matching;
+		if (superClass != null) {
+			matching = superClass.findMethod(mproto);
+			if (matching != null) return matching;
+		}
+		for (ClassInfo intf: this.myClass.getInterfaces()) {
+			matching = intf.findMethod(mproto);
+			if (matching != null) return matching;
+		}
+		return null;
 	}
 
 	@Override

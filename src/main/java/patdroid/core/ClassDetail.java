@@ -278,6 +278,8 @@ public final class ClassDetail {
 		return superClass;
 	}
 
+	public final ClassInfo[] getInterfaces() { return this.interfaces; }
+
 	public ClassDetail changeSuperClass(ClassInfo superClass) {
 		ClassDetail details = new ClassDetail(superClass, interfaces, accessFlags,
 				methods, fields, staticFields, isFrameworkClass);

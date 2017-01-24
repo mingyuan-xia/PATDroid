@@ -52,7 +52,7 @@ public final class FieldInfo {
 	
 	@Override
 	public int hashCode() {
-		return owner.hashCode() ^ fieldName.hashCode();
+		return owner.hashCode() * 31 + fieldName.hashCode();
 	}
 	
 	@Override

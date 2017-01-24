@@ -374,13 +374,19 @@ public final class ClassInfo {
 	}
 	
 	/**
-	 * <p>
-	 * <b>Note:</b> this might start class loading if the class is not loaded yet
+	 *
+	 * <b>Note:</b> this might cause class loading if the class is not loaded yet
 	 * @return the super class, or null if this class is java.lang.Object
 	 */
 	public ClassInfo getSuperClass() {
 		return getDetails().getSuperClass();
 	}
+
+	/**
+	 * Get the interfaces that the current class implements
+	 * @return interfaces
+	 */
+	public ClassInfo[] getInterfaces() { return getDetails().getInterfaces(); }
 
 	/**
 	 * Change the super class of this class to a new super class, the
