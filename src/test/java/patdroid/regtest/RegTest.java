@@ -70,15 +70,15 @@ public class RegTest {
         List<ClassInfo> sortedClasses = Ordering.usingToString().sortedCopy(ClassInfo.getAllClasses());
         for (ClassInfo c : sortedClasses) {
             if (!c.isFrameworkClass()) {
-                handleLine(c.toString());
+                handleEntry(c.toString());
                 List<MethodInfo> sortedMethods = Ordering.usingToString().sortedCopy(c.getAllMethods());
                 for (MethodInfo m : sortedMethods) {
-                    handleLine("\t" + m);
+                    handleEntry("\t" + m);
                     if (m.insns == null) {
-                        handleLine("\t\t(no instructions)");
+                        handleEntry("\t\t(no instructions)");
                     } else {
                         for (Instruction i : m.insns) {
-                            handleLine("\t\t" + i);
+                            handleEntry("\t\t" + i);
                         }
                     }
                 }
@@ -86,13 +86,15 @@ public class RegTest {
         }
     }
 
-    private void handleLine(String line) throws IOException {
-        ++lineNumber;
-        if (updateDump) {
-            this.dumpWriter.write(line);
-            this.dumpWriter.newLine();
-        } else {
-            assertEquals("line " + lineNumber, this.dumpReader.readLine(), line);
+    private void handleEntry(String entry) throws IOException {
+        for (String line : entry.split(System.lineSeparator())) {
+            ++lineNumber;
+            if (updateDump) {
+                this.dumpWriter.write(line);
+                this.dumpWriter.newLine();
+            } else {
+                assertEquals("line " + lineNumber, this.dumpReader.readLine(), line);
+            }
         }
     }
 
