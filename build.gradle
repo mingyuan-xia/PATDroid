@@ -21,6 +21,13 @@ signing {
 dependencies {
     testCompile 'junit:junit:4.12'
     compile group: 'org.smali', name: 'dexlib2', version: '2.1.3'
+    compile 'com.google.guava:guava:21.0'
+}
+
+test {
+    systemProperty 'regtest.apkpath', System.getProperty('regtest.apkpath')
+    systemProperty 'regtest.updatedump', System.getProperty('regtest.updatedump')
+    testLogging.showStandardStreams = true
 }
 
 task javadocJar(type: Jar) {
@@ -76,6 +83,12 @@ uploadArchives {
             id 'mingyuan-xia'
             name 'Mingyuan Xia'
             email 'mxia@mxia.me'
+          }
+
+          developer {
+            id 'iceb0y'
+            name 'Lu Gong'
+            email 'me@iceboy.org'
           }
         }
       }
