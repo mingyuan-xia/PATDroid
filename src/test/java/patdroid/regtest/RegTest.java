@@ -60,6 +60,7 @@ public class RegTest {
         if (updateDump) {
             this.dumpWriter.close();
         }
+        ClassInfo.globalScope.clear();
     }
 
     @Test
