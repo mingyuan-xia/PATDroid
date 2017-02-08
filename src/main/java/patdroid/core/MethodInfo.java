@@ -58,7 +58,7 @@ public final class MethodInfo {
 	public final ClassInfo[] paramTypes;
 	/**
 	 * The return type
-	 * <p> if the method is a constructor or a static initializer, this would be void </p>
+	 * <p> if the method is a constructor or a static initializer, this will always be void </p>
 	 */
 	public final ClassInfo returnType;
 	
@@ -71,7 +71,7 @@ public final class MethodInfo {
 	 */
 	public TryBlockInfo[] tbs;
 	/**
-	 * Anything that should be attached to the method
+	 * Anything that should be attached to the method, no guarantee of thread-safe update of this field
 	 */
 	public Object extra;
 

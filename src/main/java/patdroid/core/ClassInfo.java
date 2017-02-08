@@ -36,7 +36,7 @@ import patdroid.util.Log;
  * ClassInfos are obtained by find-series functions not created by constructors.
  */
 public final class ClassInfo {
-	private static final HashMap<String, ClassInfo> classes = new HashMap<String, ClassInfo>();
+	public static final Scope globalScope = new Scope();
 	public static ClassDetailLoader rootDetailLoader = new ClassDetailLoader();
 	public static final ClassInfo rootObject = findOrCreateClass(java.lang.Object.class);
 	public static final ClassInfo primitiveWide = findOrCreateClass("AndroidWide");
@@ -77,13 +77,12 @@ public final class ClassInfo {
 	 * Low-level constructor
 	 * @param fullName the full name of the class
 	 */
-	private ClassInfo(String fullName) {
+	ClassInfo(String fullName) {
 		this.fullName = fullName;
-		classes.put(fullName, this);
 	}
 
 	public static Collection<ClassInfo> getAllClasses() {
-		return classes.values();
+		return globalScope.getAllClasses();
 	}
 
 	/**
@@ -92,7 +91,7 @@ public final class ClassInfo {
 	 * @return the class or null if not found
 	 */
 	public static ClassInfo findClass(String fullName) {
-		return classes.get(fullName);
+		return globalScope.findClass(fullName);
 	}
 
 	/**
@@ -104,7 +103,7 @@ public final class ClassInfo {
 		ClassInfo u = findClass(fullName);
 		if (u == null) {
 			// create a new class
-			u = new ClassInfo(fullName);
+			u = globalScope.createClass(fullName);
 			// if it is an array, settle its base too
 			if (u.isArray()) {
 				findOrCreateClass(fullName.substring(1));
@@ -145,10 +144,10 @@ public final class ClassInfo {
 	
 	/**
 	 * Dump the class hierarchy
-	 * @return a String containing all the classes
+	 * @return a String containing all the classes in the global scope
 	 */
 	public static String dumpClassHierarchy() {
-		return classes.keySet().toString();
+		return globalScope.getAllClassNames().toString();
 	}
 
 	/**
@@ -269,7 +268,7 @@ public final class ClassInfo {
 	}
 	
 	/**
-	 * Find all methods that have the give name. This might need to look into base classes
+	 * Find all methods that have the give name. This might need to look into base classes 
 	 * <p>
 	 * <b>Note:</b> this might start class loading if the class is not loaded yet
 	 * @param name the method name
@@ -281,7 +280,7 @@ public final class ClassInfo {
 	}
 
 	/**
-	 * Find a method with given function prototype. This might need to look into base classes
+	 * Find a method with given function prototype. This might need to look into base classes 
 	 * <p>
 	 * <b>Note:</b> this might start class loading if the class is not loaded yet
 	 * @param mproto the method prototype
@@ -292,7 +291,7 @@ public final class ClassInfo {
 	}
 
 	/**
-	 * Find a method. This might need to look into base classes
+	 * Find a method. This might need to look into base classes 
 	 * <p>
 	 * <b>Note:</b> this might start class loading if the class is not loaded yet
 	 * @param name the name of the method
