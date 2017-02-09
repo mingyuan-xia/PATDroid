@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 import java.util.zip.ZipFile;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Regression test: reads APK and compare with dump files.
@@ -76,17 +77,22 @@ public class RegTest {
 
         List<ClassInfo> sortedClasses = Ordering.usingToString().sortedCopy(ClassInfo.getAllClasses());
         for (ClassInfo c : sortedClasses) {
-            if (!c.isFrameworkClass()) {
-                handleEntry(c.toString());
-                List<MethodInfo> sortedMethods = Ordering.usingToString().sortedCopy(c.getAllMethods());
-                for (MethodInfo m : sortedMethods) {
-                    handleEntry("\t" + m);
-                    if (m.insns == null) {
-                        handleEntry("\t\t(no instructions)");
-                    } else {
-                        for (Instruction i : m.insns) {
-                            handleEntry("\t\t" + i);
-                        }
+            if (c.isFrameworkClass()) {
+                continue;
+            }
+            handleEntry(c.toString());
+            if (c.isMissing()) {
+                handleEntry("\t(missing class)");
+                continue;
+            }
+            List<MethodInfo> sortedMethods = Ordering.usingToString().sortedCopy(c.getAllMethods());
+            for (MethodInfo m : sortedMethods) {
+                handleEntry("\t" + m);
+                if (m.insns == null) {
+                    handleEntry("\t\t(no instructions)");
+                } else {
+                    for (Instruction i : m.insns) {
+                        handleEntry("\t\t" + i);
                     }
                 }
             }
@@ -94,7 +100,9 @@ public class RegTest {
     }
 
     private void handleEntry(String entry) throws IOException {
-        for (String line : entry.split(System.getProperty("line.separator"))) {
+        BufferedReader entryReader = new BufferedReader(new StringReader(entry));
+        String line;
+        while ((line = entryReader.readLine()) != null) {
             ++lineNumber;
             if (updateDump) {
                 this.dumpWriter.write(line);
@@ -116,6 +124,7 @@ public class RegTest {
         boolean updateDump = updateDumpProperty.equalsIgnoreCase("true");
         File apkDir = new File(apkPath);
         File[] apkFiles = apkDir.listFiles(new PatternFilenameFilter("^.*.apk"));
+        assertNotNull("failed to list files", apkFiles);
         ImmutableList.Builder<Object[]> params = ImmutableList.builder();
         for (File apkFile : apkFiles) {
             String dumpFileName = Files.getNameWithoutExtension(apkFile.getName()) + ".txt";
