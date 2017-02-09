@@ -19,33 +19,13 @@
 
 package patdroid.core;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
 import patdroid.util.Log;
 
 /**
  * Low-level primitive type value (immutable).
  */
 public final class PrimitiveInfo { 
-	
-	public static PrimitiveInfo trueValue = new PrimitiveInfo(true);
-	public static PrimitiveInfo falseValue = new PrimitiveInfo(false);
-	public static Map<ClassInfo, PrimitiveInfo> primitiveZeros;
-	static {
-		HashMap<ClassInfo, PrimitiveInfo> t = new HashMap<ClassInfo, PrimitiveInfo>();
-		t.put(ClassInfo.globalScope.primitiveVoid, new PrimitiveInfo(0));
-		t.put(ClassInfo.globalScope.primitiveLong, new PrimitiveInfo(0l));
-		t.put(ClassInfo.globalScope.primitiveBoolean, new PrimitiveInfo(false));
-		t.put(ClassInfo.globalScope.primitiveByte, new PrimitiveInfo((byte)0));
-		t.put(ClassInfo.globalScope.primitiveInt, new PrimitiveInfo(0));
-		t.put(ClassInfo.globalScope.primitiveChar, new PrimitiveInfo('\0'));
-		t.put(ClassInfo.globalScope.primitiveDouble, new PrimitiveInfo(0.0));
-		t.put(ClassInfo.globalScope.primitiveFloat, new PrimitiveInfo(0f));
-		primitiveZeros = Collections.unmodifiableMap(t);
-	}
-	
+
 	/**
 	 * The class object of the value type
 	 */
@@ -74,29 +54,24 @@ public final class PrimitiveInfo {
 		this.high32 = (int)(l >> 32);
 	}
 	
-	/**
-	 * Create an integer
-	 * 
-	 * @param value the value
-	 */
-	public PrimitiveInfo(int value) {
-		this(ClassInfo.globalScope.primitiveInt, value, 0);
+	public static PrimitiveInfo fromInt(JavaScope javaScope, int value) {
+		return new PrimitiveInfo(javaScope.primitiveInt, value, 0);
 	}
 
-	public PrimitiveInfo(long value) {
-		this(ClassInfo.globalScope.primitiveLong, value);
+	public static PrimitiveInfo fromLong(JavaScope javaScope, long value) {
+        return new PrimitiveInfo(javaScope.primitiveLong, value);
 	}
 
-	public PrimitiveInfo(double value) {
-		this(ClassInfo.globalScope.primitiveDouble, Double.doubleToLongBits(value));
+	public static PrimitiveInfo fromDouble(JavaScope javaScope, double value) {
+        return new PrimitiveInfo(javaScope.primitiveDouble, Double.doubleToLongBits(value));
 	}
 
-	public PrimitiveInfo(float value) {
-		this(ClassInfo.globalScope.primitiveFloat, Float.floatToIntBits(value), 0);
+	public static PrimitiveInfo fromFloat(JavaScope javaScope, float value) {
+        return new PrimitiveInfo(javaScope.primitiveFloat, Float.floatToIntBits(value), 0);
 	}
 
-	public PrimitiveInfo(boolean value) {
-		this(ClassInfo.globalScope.primitiveBoolean, value ? 1 : 0, 0);
+	public static PrimitiveInfo fromBoolean(JavaScope javaScope, boolean value) {
+        return new PrimitiveInfo(javaScope.primitiveBoolean, value ? 1 : 0, 0);
 	}
 
 	/**
@@ -105,21 +80,21 @@ public final class PrimitiveInfo {
 	 * @param o an arbitrary object of primitive boxing type
 	 * @return a PrimitiveInfo
 	 */
-	public static PrimitiveInfo fromObject(Object o) {
+	public static PrimitiveInfo fromObject(JavaScope javaScope, Object o) {
 		if (o instanceof Integer) {
-			return new PrimitiveInfo(((Integer) o).intValue());
+			return fromInt(javaScope, ((Integer) o).intValue());
 		} else if (o instanceof Short) {
-			return new PrimitiveInfo(((Short) o).intValue());
+			return fromInt(javaScope, ((Short) o).intValue());
 		} else if (o instanceof Byte) {
-			return new PrimitiveInfo(((Byte) o).intValue());
+			return fromInt(javaScope, ((Byte) o).intValue());
 		} else if (o instanceof Long) {
-			return new PrimitiveInfo(((Long) o).longValue());
+			return fromLong(javaScope, ((Long) o).longValue());
 		} else if (o instanceof Float) {
-			return new PrimitiveInfo(((Float) o).floatValue());
+			return fromFloat(javaScope, ((Float) o).floatValue());
 		} else if (o instanceof Double) {
-			return new PrimitiveInfo(((Double) o).doubleValue());
+			return fromDouble(javaScope, ((Double) o).doubleValue());
 		} else if (o instanceof Boolean) {
-			return new PrimitiveInfo(((Boolean) o).booleanValue());
+			return fromBoolean(javaScope, ((Boolean) o).booleanValue());
 		} else {
 			Log.err("unsupported object to ValueInfo" + o.getClass().toString());
 			return null;
@@ -159,20 +134,25 @@ public final class PrimitiveInfo {
 		return low32 == 1;
 	}
 
-	public PrimitiveInfo unsafeCastTo(ClassInfo target_type) {
-		Log.doAssert(target_type.isPrimitive(), "must cast to a primitive type");
-		if (target_type == ClassInfo.globalScope.primitiveChar ||
-				target_type == ClassInfo.globalScope.primitiveShort ||
-                target_type == ClassInfo.globalScope.primitiveByte) {
-			target_type = ClassInfo.globalScope.primitiveInt;
-		}
-		return new PrimitiveInfo(target_type, low32, high32);
-	}
-	
-	public final PrimitiveInfo castTo(ClassInfo target_type) {
-		Log.doAssert(target_type.isPrimitive(), "must cast to a primitive type");
+	private final JavaScope javaScope() {
+	    return (JavaScope) this.kind.scope;
+    }
+
+    public PrimitiveInfo unsafeCastTo(ClassInfo targetType) {
+        Log.doAssert(targetType.isPrimitive(), "must cast to a primitive type");
+        if (targetType == javaScope().primitiveChar ||
+                targetType == javaScope().primitiveShort ||
+                targetType == javaScope().primitiveByte) {
+            targetType = javaScope().primitiveInt;
+        }
+        return new PrimitiveInfo(targetType, low32, high32);
+    }
+
+    public final PrimitiveInfo castTo(ClassInfo targetType) {
+		Log.doAssert(targetType.isPrimitive(), "must cast to a primitive type");
+        Log.doAssert(targetType.scope == javaScope(), "must be in the same scope");
 		PrimitiveInfo v = null;
-		if (target_type == ClassInfo.globalScope.primitiveInt) {
+		if (targetType == javaScope().primitiveInt) {
 			int val = 0;
 			if (isLong()) {
 				val = (int) longValue();
@@ -185,8 +165,8 @@ public final class PrimitiveInfo {
 			} else if (isDouble()) {
 				val = (int) doubleValue();
 			}
-			v = new PrimitiveInfo(val);
-		} else if (target_type == ClassInfo.globalScope.primitiveLong) {
+			v = fromInt(javaScope(), val);
+		} else if (targetType == javaScope().primitiveLong) {
 			long val = 0l;
 			if (isLong()) {
 				val = (long) longValue();
@@ -199,8 +179,8 @@ public final class PrimitiveInfo {
 			} else if (isDouble()) {
 				val = (long) doubleValue();
 			}
-			v = new PrimitiveInfo(val);
-		} else if (target_type == ClassInfo.globalScope.primitiveFloat) {
+			v = fromLong(javaScope(), val);
+		} else if (targetType == javaScope().primitiveFloat) {
 			float val = 0f;
 			if (isLong()) {
 				val = (float) longValue();
@@ -213,8 +193,8 @@ public final class PrimitiveInfo {
 			} else if (isDouble()) {
 				val = (float) doubleValue();
 			}
-			v = new PrimitiveInfo(val);
-		} else if (target_type == ClassInfo.globalScope.primitiveDouble) {
+			v = fromFloat(javaScope(), val);
+		} else if (targetType == javaScope().primitiveDouble) {
 			double val = 0.0;
 			if (isLong()) {
 				val = (double) longValue();
@@ -227,39 +207,39 @@ public final class PrimitiveInfo {
 			} else if (isDouble()) {
 				val = (double) doubleValue();
 			}
-			v = new PrimitiveInfo(val);
+			v = fromDouble(javaScope(), val);
 		} else { // short, boolean, char, byte
-			v = new PrimitiveInfo(ClassInfo.globalScope.primitiveInt, this.low32);
+			v = new PrimitiveInfo(javaScope().primitiveInt, this.low32);
 		}
 		return v;
 	}
 
-	public static PrimitiveInfo twoIntsToDouble(int vlow, int vhigh) {
-		return new PrimitiveInfo(ClassInfo.globalScope.primitiveDouble, vlow, vhigh);
+	public static PrimitiveInfo twoIntsToDouble(JavaScope javaScope, int vlow, int vhigh) {
+		return new PrimitiveInfo(javaScope.primitiveDouble, vlow, vhigh);
 	}
 
-	public static PrimitiveInfo twoIntsToLong(int vlow, int vhigh) {
-		return new PrimitiveInfo(ClassInfo.globalScope.primitiveLong, vlow, vhigh);
+	public static PrimitiveInfo twoIntsToLong(JavaScope javaScope, int vlow, int vhigh) {
+		return new PrimitiveInfo(javaScope.primitiveLong, vlow, vhigh);
 	}
 
 	public final boolean isInteger() {
-		return kind == ClassInfo.globalScope.primitiveInt;
+		return kind == javaScope().primitiveInt;
 	}
 
 	public final boolean isLong() {
-		return kind == ClassInfo.globalScope.primitiveLong;
+		return kind == javaScope().primitiveLong;
 	}
 	
 	public final boolean isDouble() {
-		return kind == ClassInfo.globalScope.primitiveDouble;
+		return kind == javaScope().primitiveDouble;
 	}
 
 	public final boolean isFloat() {
-		return kind == ClassInfo.globalScope.primitiveFloat;
+		return kind == javaScope().primitiveFloat;
 	}
 
 	public final boolean isBoolean() {
-		return kind == ClassInfo.globalScope.primitiveBoolean;
+		return kind == javaScope().primitiveBoolean;
 	}
 
 	public final boolean isZero() {

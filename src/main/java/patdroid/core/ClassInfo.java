@@ -39,6 +39,7 @@ public final class ClassInfo {
 	public static final JavaScope globalScope = new JavaScope();
 	public static ClassDetailLoader rootDetailLoader = new ClassDetailLoader();
 
+	public final Scope scope;
 	/**
 	 * The Java canonical class name
 	 */
@@ -50,7 +51,8 @@ public final class ClassInfo {
 	 * Low-level constructor
 	 * @param fullName the full name of the class
 	 */
-	ClassInfo(String fullName) {
+	ClassInfo(Scope scope, String fullName) {
+		this.scope = scope;
 		this.fullName = fullName;
 	}
 

@@ -184,7 +184,7 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
             final MethodImplementation impl = method.getImplementation();
             // Decode instructions
             if (impl != null) {
-                MethodImplementationTranslator mit = new MethodImplementationTranslator(resolver);
+                MethodImplementationTranslator mit = new MethodImplementationTranslator(ClassInfo.globalScope, resolver);
                 mit.translate(mi, impl);
             }
         }

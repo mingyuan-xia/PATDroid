@@ -23,12 +23,10 @@ import patdroid.core.MethodInfo;
 import patdroid.util.Log;
 import patdroid.util.Pair;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 
 public class InvocationResolver {
     public final ArrayList<Pair<MethodInfo, Integer>> a = new ArrayList<Pair<MethodInfo, Integer>>();
-    public boolean resolved = false;
 
     /**
      * Register an invocation instruction to be resolved
@@ -54,6 +52,5 @@ public class InvocationResolver {
                 i.opcode = Instruction.OP_HALT;
             }
         }
-        resolved = true;
     }
 }

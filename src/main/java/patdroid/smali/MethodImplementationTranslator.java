@@ -64,6 +64,7 @@ import patdroid.util.Pair;
  */
 @SuppressWarnings("incomplete-switch")
 public final class MethodImplementationTranslator {
+	private final JavaScope javaScope;
 	private final InvocationResolver resolver;
 	private MethodInfo mi;
 	private int currentCodeAddress;
@@ -77,8 +78,9 @@ public final class MethodImplementationTranslator {
 	private final HashMap<Integer, PayloadInstruction> payloadCache =
 			new HashMap<Integer, PayloadInstruction>();
 	
-	MethodImplementationTranslator(InvocationResolver resolver) {
-		this.resolver = resolver;
+	MethodImplementationTranslator(JavaScope javaScope, InvocationResolver resolver) {
+		this.javaScope = javaScope;
+	    this.resolver = resolver;
 	}
 	
 	private static Instruction translateReturn(final Instruction10x i0) {
@@ -88,51 +90,51 @@ public final class MethodImplementationTranslator {
 		return i;
 	}
 	
-	private static Instruction translateReturn(final Instruction11x i1) {
+	private Instruction translateReturn(final Instruction11x i1) {
 		final Instruction i = new Instruction();
 		i.opcode = Instruction.OP_RETURN;
 		i.opcode_aux = Instruction.OP_RETURN_SOMETHING;
 		i.r0 = (short) i1.getRegisterA();
 		switch (i1.getOpcode()) {
 		case RETURN:
-			i.type = ClassInfo.globalScope.primitiveVoid;
+			i.type = javaScope.primitiveVoid;
 			break;
 		case RETURN_WIDE:
-			i.type = ClassInfo.globalScope.primitiveWide;
+			i.type = javaScope.primitiveWide;
 			break;
 		case RETURN_OBJECT:
-			i.type = ClassInfo.globalScope.rootObject;
+			i.type = javaScope.rootObject;
 			break;
 		}
 		return i;
 	}
 	
-	private static Instruction translateMove(final OneRegisterInstruction i1) {
+	private Instruction translateMove(final OneRegisterInstruction i1) {
 		final Instruction i = new Instruction();
 		i.opcode = Instruction.OP_MOV;
 		i.rdst = (short) i1.getRegisterA();
 		switch (i1.getOpcode()) {
 		case MOVE_RESULT:
 			i.opcode_aux = Instruction.OP_MOV_RESULT;
-			i.type = ClassInfo.globalScope.primitiveVoid;
+			i.type = javaScope.primitiveVoid;
 			break;
 		case MOVE_RESULT_WIDE:
 			i.opcode_aux = Instruction.OP_MOV_RESULT;
-			i.type = ClassInfo.globalScope.primitiveWide;
+			i.type = javaScope.primitiveWide;
 			break;
 		case MOVE_RESULT_OBJECT:
 			i.opcode_aux = Instruction.OP_MOV_RESULT;
-			i.type = ClassInfo.globalScope.rootObject;
+			i.type = javaScope.rootObject;
 			break;
 		case MOVE_EXCEPTION:
 			i.opcode_aux = Instruction.OP_MOV_EXCEPTION;
-			i.type = ClassInfo.globalScope.rootObject;
+			i.type = javaScope.rootObject;
 			break;
 		}
 		return i;
 	}
 
-	private static Instruction translateMove(final TwoRegisterInstruction i2) {
+	private Instruction translateMove(final TwoRegisterInstruction i2) {
 		final Instruction i = new Instruction();
 		i.opcode = Instruction.OP_MOV;
 		i.opcode_aux = Instruction.OP_MOV_REG;
@@ -142,23 +144,23 @@ public final class MethodImplementationTranslator {
 		case MOVE:
 		case MOVE_FROM16:
 		case MOVE_16:
-			i.type = ClassInfo.globalScope.primitiveVoid;
+			i.type = javaScope.primitiveVoid;
 			break;
 		case MOVE_WIDE:
 		case MOVE_WIDE_FROM16:
 		case MOVE_WIDE_16:
-			i.type = ClassInfo.globalScope.primitiveWide;
+			i.type = javaScope.primitiveWide;
 			break;
 		case MOVE_OBJECT:
 		case MOVE_OBJECT_FROM16:
 		case MOVE_OBJECT_16:
-			i.type = ClassInfo.globalScope.rootObject;
+			i.type = javaScope.rootObject;
 			break;
 		}
 		return i;
 	}
 	
-	private static Instruction translateConst(final OneRegisterInstruction i1) {
+	private Instruction translateConst(final OneRegisterInstruction i1) {
 		final Instruction i = new Instruction();
 		i.opcode = Instruction.OP_MOV;
 		i.opcode_aux = Instruction.OP_MOV_CONST;
@@ -168,23 +170,23 @@ public final class MethodImplementationTranslator {
 		case CONST_16:
 		case CONST:
 		case CONST_HIGH16:
-			i.type = ClassInfo.globalScope.primitiveVoid;
-			i.extra = new PrimitiveInfo(((NarrowLiteralInstruction) i1).getNarrowLiteral());
+			i.type = javaScope.primitiveVoid;
+			i.extra = PrimitiveInfo.fromInt(javaScope, ((NarrowLiteralInstruction) i1).getNarrowLiteral());
 			break;
 		case CONST_WIDE_16:
 		case CONST_WIDE_32:
 		case CONST_WIDE:
 		case CONST_WIDE_HIGH16:
-			i.type = ClassInfo.globalScope.primitiveWide;
-			i.extra = new PrimitiveInfo(((WideLiteralInstruction) i1).getWideLiteral());
+			i.type = javaScope.primitiveWide;
+			i.extra = PrimitiveInfo.fromLong(javaScope, ((WideLiteralInstruction) i1).getWideLiteral());
 			break;
 		case CONST_STRING:
 		case CONST_STRING_JUMBO:
-			i.type = ClassInfo.globalScope.findOrCreateClass(String.class);
+			i.type = javaScope.findOrCreateClass(String.class);
 			i.extra = ((StringReference) ((ReferenceInstruction) i1).getReference()).getString();
 			break;
 		case CONST_CLASS:
-			i.type = ClassInfo.globalScope.findOrCreateClass(Class.class);
+			i.type = javaScope.findOrCreateClass(Class.class);
 			i.extra = Dalvik.findOrCreateClass(
 					((TypeReference) ((ReferenceInstruction) i1).getReference()).getType());
 			break;
@@ -221,7 +223,7 @@ public final class MethodImplementationTranslator {
 		return i;
 	}
 
-	private static Instruction translateArithmetic(final TwoRegisterInstruction i2) {
+	private Instruction translateArithmetic(final TwoRegisterInstruction i2) {
 		final Instruction i = new Instruction();
 		i.opcode = Instruction.OP_ARITHETIC;
 		i.rdst = (short) i2.getRegisterA();
@@ -234,112 +236,112 @@ public final class MethodImplementationTranslator {
 			break;
 		case ARRAY_LENGTH:
 			i.opcode_aux = Instruction.OP_A_ARRAY_LENGTH;
-			i.type = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveInt;
 			break;
 		case NEG_INT:
 			i.opcode_aux = Instruction.OP_A_NEG;
-			i.type = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveInt;
 			break;
 		case NOT_INT:
 			i.opcode_aux = Instruction.OP_A_NOT;
-			i.type = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveInt;
 			break;
 		case NEG_LONG:
 			i.opcode_aux = Instruction.OP_A_NEG;
-			i.type = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveLong;
 			break;
 		case NOT_LONG:
 			i.opcode_aux = Instruction.OP_A_NOT;
-			i.type = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveLong;
 			break;
 		case NEG_FLOAT:
 			i.opcode_aux = Instruction.OP_A_NEG;
-			i.type = ClassInfo.globalScope.primitiveFloat;
+			i.type = javaScope.primitiveFloat;
 			break;
 		case NEG_DOUBLE:
 			i.opcode_aux = Instruction.OP_A_NEG;
-			i.type = ClassInfo.globalScope.primitiveDouble;
+			i.type = javaScope.primitiveDouble;
 			break;
 		case INT_TO_LONG:
 			i.opcode_aux = Instruction.OP_A_CAST;
-			i.type = ClassInfo.globalScope.primitiveLong;
-			i.extra = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveLong;
+			i.extra = javaScope.primitiveInt;
 			break;
 		case INT_TO_FLOAT:
 			i.opcode_aux = Instruction.OP_A_CAST;
-			i.type = ClassInfo.globalScope.primitiveFloat;
-			i.extra = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveFloat;
+			i.extra = javaScope.primitiveInt;
 			break;
 		case INT_TO_DOUBLE:
 			i.opcode_aux = Instruction.OP_A_CAST;
-			i.type = ClassInfo.globalScope.primitiveDouble;
-			i.extra = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveDouble;
+			i.extra = javaScope.primitiveInt;
 			break;
 		case LONG_TO_INT:
 			i.opcode_aux = Instruction.OP_A_CAST;
-			i.type = ClassInfo.globalScope.primitiveInt;
-			i.extra = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveInt;
+			i.extra = javaScope.primitiveLong;
 			break;
 		case LONG_TO_FLOAT:
 			i.opcode_aux = Instruction.OP_A_CAST;
-			i.type = ClassInfo.globalScope.primitiveFloat;
-			i.extra = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveFloat;
+			i.extra = javaScope.primitiveLong;
 			break;
 		case LONG_TO_DOUBLE:
 			i.opcode_aux = Instruction.OP_A_CAST;
-			i.type = ClassInfo.globalScope.primitiveDouble;
-			i.extra = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveDouble;
+			i.extra = javaScope.primitiveLong;
 			break;
 		case FLOAT_TO_INT:
 			i.opcode_aux = Instruction.OP_A_CAST;
-			i.type = ClassInfo.globalScope.primitiveInt;
-			i.extra = ClassInfo.globalScope.primitiveFloat;
+			i.type = javaScope.primitiveInt;
+			i.extra = javaScope.primitiveFloat;
 			break;
 		case FLOAT_TO_LONG:
 			i.opcode_aux = Instruction.OP_A_CAST;
-			i.type = ClassInfo.globalScope.primitiveLong;
-			i.extra = ClassInfo.globalScope.primitiveFloat;
+			i.type = javaScope.primitiveLong;
+			i.extra = javaScope.primitiveFloat;
 			break;
 		case FLOAT_TO_DOUBLE:
 			i.opcode_aux = Instruction.OP_A_CAST;
-			i.type = ClassInfo.globalScope.primitiveDouble;
-			i.extra = ClassInfo.globalScope.primitiveFloat;
+			i.type = javaScope.primitiveDouble;
+			i.extra = javaScope.primitiveFloat;
 			break;
 		case DOUBLE_TO_INT:
 			i.opcode_aux = Instruction.OP_A_CAST;
-			i.type = ClassInfo.globalScope.primitiveInt;
-			i.extra = ClassInfo.globalScope.primitiveDouble;
+			i.type = javaScope.primitiveInt;
+			i.extra = javaScope.primitiveDouble;
 			break;
 		case DOUBLE_TO_LONG:
 			i.opcode_aux = Instruction.OP_A_CAST;
-			i.type = ClassInfo.globalScope.primitiveLong;
-			i.extra = ClassInfo.globalScope.primitiveDouble;
+			i.type = javaScope.primitiveLong;
+			i.extra = javaScope.primitiveDouble;
 			break;
 		case DOUBLE_TO_FLOAT:
 			i.opcode_aux = Instruction.OP_A_CAST;
-			i.type = ClassInfo.globalScope.primitiveFloat;
-			i.extra = ClassInfo.globalScope.primitiveDouble;
+			i.type = javaScope.primitiveFloat;
+			i.extra = javaScope.primitiveDouble;
 			break;
 		case INT_TO_BYTE:
 			i.opcode_aux = Instruction.OP_A_CAST;
-			i.type = ClassInfo.globalScope.primitiveByte;
-			i.extra = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveByte;
+			i.extra = javaScope.primitiveInt;
 			break;
 		case INT_TO_CHAR:
 			i.opcode_aux = Instruction.OP_A_CAST;
-			i.type = ClassInfo.globalScope.primitiveChar;
-			i.extra = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveChar;
+			i.extra = javaScope.primitiveInt;
 			break;
 		case INT_TO_SHORT:
 			i.opcode_aux = Instruction.OP_A_CAST;
-			i.type = ClassInfo.globalScope.primitiveShort;
-			i.extra = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveShort;
+			i.extra = javaScope.primitiveInt;
 			break;
 		}
 		return i;
 	}
 	
-	private static Instruction translateArithmetic(final ThreeRegisterInstruction i3) {
+	private Instruction translateArithmetic(final ThreeRegisterInstruction i3) {
 		final Instruction i = new Instruction();
 		i.opcode = Instruction.OP_ARITHETIC;
 		i.rdst = (short) i3.getRegisterA();
@@ -348,137 +350,137 @@ public final class MethodImplementationTranslator {
 		switch (i3.getOpcode()) {
 		case ADD_INT:
 			i.opcode_aux = Instruction.OP_A_ADD;
-			i.type = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveInt;
 			break;
 		case SUB_INT:
 			i.opcode_aux = Instruction.OP_A_SUB;
-			i.type = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveInt;
 			break;
 		case MUL_INT:
 			i.opcode_aux = Instruction.OP_A_MUL;
-			i.type = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveInt;
 			break;
 		case DIV_INT:
 			i.opcode_aux = Instruction.OP_A_DIV;
-			i.type = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveInt;
 			break;
 		case REM_INT:
 			i.opcode_aux = Instruction.OP_A_REM;
-			i.type = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveInt;
 			break;
 		case AND_INT:
 			i.opcode_aux = Instruction.OP_A_AND;
-			i.type = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveInt;
 			break;
 		case OR_INT:
 			i.opcode_aux = Instruction.OP_A_OR;
-			i.type = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveInt;
 			break;
 		case XOR_INT:
 			i.opcode_aux = Instruction.OP_A_XOR;
-			i.type = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveInt;
 			break;
 		case SHL_INT:			
 			i.opcode_aux = Instruction.OP_A_SHL;
-			i.type = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveInt;
 			break;
 		case SHR_INT:
 			i.opcode_aux = Instruction.OP_A_SHR;
-			i.type = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveInt;
 			break;
 		case USHR_INT:
 			i.opcode_aux = Instruction.OP_A_USHR;
-			i.type = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveInt;
 			break;
 		case ADD_LONG:
 			i.opcode_aux = Instruction.OP_A_ADD;
-			i.type = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveLong;
 			break;
 		case SUB_LONG:
 			i.opcode_aux = Instruction.OP_A_SUB;
-			i.type = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveLong;
 			break;
 		case MUL_LONG:
 			i.opcode_aux = Instruction.OP_A_MUL;
-			i.type = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveLong;
 			break;
 		case DIV_LONG:
 			i.opcode_aux = Instruction.OP_A_DIV;
-			i.type = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveLong;
 			break;
 		case REM_LONG:
 			i.opcode_aux = Instruction.OP_A_REM;
-			i.type = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveLong;
 			break;
 		case AND_LONG:
 			i.opcode_aux = Instruction.OP_A_AND;
-			i.type = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveLong;
 			break;
 		case OR_LONG:
 			i.opcode_aux = Instruction.OP_A_OR;
-			i.type = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveLong;
 			break;
 		case XOR_LONG:
 			i.opcode_aux = Instruction.OP_A_XOR;
-			i.type = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveLong;
 			break;
 		case SHL_LONG:
 			i.opcode_aux = Instruction.OP_A_SHL;
-			i.type = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveLong;
 			break;
 		case SHR_LONG:
 			i.opcode_aux = Instruction.OP_A_SHR;
-			i.type = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveLong;
 			break;
 		case USHR_LONG:
 			i.opcode_aux = Instruction.OP_A_USHR;
-			i.type = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveLong;
 			break;
 		case ADD_FLOAT:
 			i.opcode_aux = Instruction.OP_A_ADD;
-			i.type = ClassInfo.globalScope.primitiveFloat;
+			i.type = javaScope.primitiveFloat;
 			break;
 		case SUB_FLOAT:
 			i.opcode_aux = Instruction.OP_A_SUB;
-			i.type = ClassInfo.globalScope.primitiveFloat;
+			i.type = javaScope.primitiveFloat;
 			break;
 		case MUL_FLOAT:
 			i.opcode_aux = Instruction.OP_A_MUL;
-			i.type = ClassInfo.globalScope.primitiveFloat;
+			i.type = javaScope.primitiveFloat;
 			break;
 		case DIV_FLOAT:
 			i.opcode_aux = Instruction.OP_A_DIV;
-			i.type = ClassInfo.globalScope.primitiveFloat;
+			i.type = javaScope.primitiveFloat;
 			break;
 		case REM_FLOAT:
 			i.opcode_aux = Instruction.OP_A_REM;
-			i.type = ClassInfo.globalScope.primitiveFloat;
+			i.type = javaScope.primitiveFloat;
 			break;
 		case ADD_DOUBLE:
 			i.opcode_aux = Instruction.OP_A_ADD;
-			i.type = ClassInfo.globalScope.primitiveDouble;
+			i.type = javaScope.primitiveDouble;
 			break;
 		case SUB_DOUBLE:
 			i.opcode_aux = Instruction.OP_A_SUB;
-			i.type = ClassInfo.globalScope.primitiveDouble;
+			i.type = javaScope.primitiveDouble;
 			break;
 		case MUL_DOUBLE:
 			i.opcode_aux = Instruction.OP_A_MUL;
-			i.type = ClassInfo.globalScope.primitiveDouble;
+			i.type = javaScope.primitiveDouble;
 			break;
 		case DIV_DOUBLE:
 			i.opcode_aux = Instruction.OP_A_DIV;
-			i.type = ClassInfo.globalScope.primitiveDouble;
+			i.type = javaScope.primitiveDouble;
 			break;
 		case REM_DOUBLE:
 			i.opcode_aux = Instruction.OP_A_REM;
-			i.type = ClassInfo.globalScope.primitiveDouble;
+			i.type = javaScope.primitiveDouble;
 			break;
 		}
 		return i;
 	}
 
-	private static Instruction translateArithmeticTwoAddr(final TwoRegisterInstruction i2) {
+	private Instruction translateArithmeticTwoAddr(final TwoRegisterInstruction i2) {
 		final Instruction i = new Instruction();
 		i.opcode = Instruction.OP_ARITHETIC;
 		i.rdst = i.r0 = (short) i2.getRegisterA();
@@ -486,142 +488,142 @@ public final class MethodImplementationTranslator {
 		switch (i2.getOpcode()) {
 		case ADD_INT_2ADDR:
 			i.opcode_aux = Instruction.OP_A_ADD;
-			i.type = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveInt;
 			break;
 		case SUB_INT_2ADDR:
 			i.opcode_aux = Instruction.OP_A_SUB;
-			i.type = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveInt;
 			break;
 		case MUL_INT_2ADDR:
 			i.opcode_aux = Instruction.OP_A_MUL;
-			i.type = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveInt;
 			break;
 		case DIV_INT_2ADDR:
 			i.opcode_aux = Instruction.OP_A_DIV;
-			i.type = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveInt;
 			break;
 		case REM_INT_2ADDR:
 			i.opcode_aux = Instruction.OP_A_REM;
-			i.type = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveInt;
 			break;
 		case AND_INT_2ADDR:
 			i.opcode_aux = Instruction.OP_A_AND;
-			i.type = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveInt;
 			break;
 		case OR_INT_2ADDR:
 			i.opcode_aux = Instruction.OP_A_OR;
-			i.type = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveInt;
 			break;
 		case XOR_INT_2ADDR:
 			i.opcode_aux = Instruction.OP_A_XOR;
-			i.type = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveInt;
 			break;
 		case SHL_INT_2ADDR:
 			i.opcode_aux = Instruction.OP_A_SHL;
-			i.type = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveInt;
 			break;
 		case SHR_INT_2ADDR:
 			i.opcode_aux = Instruction.OP_A_SHR;
-			i.type = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveInt;
 			break;
 		case USHR_INT_2ADDR:
 			i.opcode_aux = Instruction.OP_A_USHR;
-			i.type = ClassInfo.globalScope.primitiveInt;
+			i.type = javaScope.primitiveInt;
 			break;
 		case ADD_LONG_2ADDR:
 			i.opcode_aux = Instruction.OP_A_ADD;
-			i.type = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveLong;
 			break;
 		case SUB_LONG_2ADDR:
 			i.opcode_aux = Instruction.OP_A_SUB;
-			i.type = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveLong;
 			break;
 		case MUL_LONG_2ADDR:
 			i.opcode_aux = Instruction.OP_A_MUL;
-			i.type = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveLong;
 			break;
 		case DIV_LONG_2ADDR:
 			i.opcode_aux = Instruction.OP_A_DIV;
-			i.type = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveLong;
 			break;
 		case REM_LONG_2ADDR:
 			i.opcode_aux = Instruction.OP_A_REM;
-			i.type = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveLong;
 			break;
 		case AND_LONG_2ADDR:
 			i.opcode_aux = Instruction.OP_A_AND;
-			i.type = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveLong;
 			break;
 		case OR_LONG_2ADDR:
 			i.opcode_aux = Instruction.OP_A_OR;
-			i.type = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveLong;
 			break;
 		case XOR_LONG_2ADDR:
 			i.opcode_aux = Instruction.OP_A_XOR;
-			i.type = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveLong;
 			break;
 		case SHL_LONG_2ADDR:
 			i.opcode_aux = Instruction.OP_A_SHL;
-			i.type = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveLong;
 			break;
 		case SHR_LONG_2ADDR:
 			i.opcode_aux = Instruction.OP_A_SHR;
-			i.type = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveLong;
 			break;
 		case USHR_LONG_2ADDR:
 			i.opcode_aux = Instruction.OP_A_USHR;
-			i.type = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveLong;
 			break;
 		case ADD_FLOAT_2ADDR:
 			i.opcode_aux = Instruction.OP_A_ADD;
-			i.type = ClassInfo.globalScope.primitiveFloat;
+			i.type = javaScope.primitiveFloat;
 			break;
 		case SUB_FLOAT_2ADDR:
 			i.opcode_aux = Instruction.OP_A_SUB;
-			i.type = ClassInfo.globalScope.primitiveFloat;
+			i.type = javaScope.primitiveFloat;
 			break;
 		case MUL_FLOAT_2ADDR:
 			i.opcode_aux = Instruction.OP_A_MUL;
-			i.type = ClassInfo.globalScope.primitiveFloat;
+			i.type = javaScope.primitiveFloat;
 			break;
 		case DIV_FLOAT_2ADDR:
 			i.opcode_aux = Instruction.OP_A_DIV;
-			i.type = ClassInfo.globalScope.primitiveFloat;
+			i.type = javaScope.primitiveFloat;
 			break;
 		case REM_FLOAT_2ADDR:
 			i.opcode_aux = Instruction.OP_A_REM;
-			i.type = ClassInfo.globalScope.primitiveFloat;
+			i.type = javaScope.primitiveFloat;
 			break;
 		case ADD_DOUBLE_2ADDR:
 			i.opcode_aux = Instruction.OP_A_ADD;
-			i.type = ClassInfo.globalScope.primitiveDouble;
+			i.type = javaScope.primitiveDouble;
 			break;
 		case SUB_DOUBLE_2ADDR:
 			i.opcode_aux = Instruction.OP_A_SUB;
-			i.type = ClassInfo.globalScope.primitiveDouble;
+			i.type = javaScope.primitiveDouble;
 			break;
 		case MUL_DOUBLE_2ADDR:
 			i.opcode_aux = Instruction.OP_A_MUL;
-			i.type = ClassInfo.globalScope.primitiveDouble;
+			i.type = javaScope.primitiveDouble;
 			break;
 		case DIV_DOUBLE_2ADDR:
 			i.opcode_aux = Instruction.OP_A_DIV;
-			i.type = ClassInfo.globalScope.primitiveDouble;
+			i.type = javaScope.primitiveDouble;
 			break;
 		case REM_DOUBLE_2ADDR:
 			i.opcode_aux = Instruction.OP_A_REM;
-			i.type = ClassInfo.globalScope.primitiveDouble;
+			i.type = javaScope.primitiveDouble;
 			break;
 		}
 		return i;
 	}
 
-	private static Instruction translateArithmeticLit(final TwoRegisterInstruction i2) {
+	private Instruction translateArithmeticLit(final TwoRegisterInstruction i2) {
 		final Instruction i = new Instruction();
 		i.opcode = Instruction.OP_ARITHETIC;
 		i.rdst = (short) i2.getRegisterA();
 		i.r0 = (short) i2.getRegisterB();
-		i.extra = new PrimitiveInfo(((NarrowLiteralInstruction) i2).getNarrowLiteral());
+		i.extra = PrimitiveInfo.fromInt(javaScope, ((NarrowLiteralInstruction) i2).getNarrowLiteral());
 		switch (i2.getOpcode()) {
 		case ADD_INT_LIT16:
 		case ADD_INT_LIT8:
@@ -757,7 +759,7 @@ public final class MethodImplementationTranslator {
 		i.opcode = Instruction.OP_EXCEPTION_OP;
 		i.opcode_aux = Instruction.OP_EXCEPTION_THROW;
 		i.r0 = (short) i1.getRegisterA();
-		i.type = ClassInfo.globalScope.rootObject;
+		i.type = javaScope.rootObject;
 		return i;
 	}
 	
@@ -818,23 +820,23 @@ public final class MethodImplementationTranslator {
 		switch (i3.getOpcode()) {
 		case CMPL_FLOAT:
 			i.opcode_aux = Instruction.OP_CMP_LESS;
-			i.type = ClassInfo.globalScope.primitiveFloat;
+			i.type = javaScope.primitiveFloat;
 			break;
 		case CMPG_FLOAT:
 			i.opcode_aux = Instruction.OP_CMP_GREATER;
-			i.type = ClassInfo.globalScope.primitiveFloat;
+			i.type = javaScope.primitiveFloat;
 			break;
 		case CMPL_DOUBLE:
 			i.opcode_aux = Instruction.OP_CMP_LESS;
-			i.type = ClassInfo.globalScope.primitiveDouble;
+			i.type = javaScope.primitiveDouble;
 			break;
 		case CMPG_DOUBLE:
 			i.opcode_aux = Instruction.OP_CMP_GREATER;
-			i.type = ClassInfo.globalScope.primitiveDouble;
+			i.type = javaScope.primitiveDouble;
 			break;
 		case CMP_LONG:
 			i.opcode_aux = Instruction.OP_CMP_LONG;
-			i.type = ClassInfo.globalScope.primitiveLong;
+			i.type = javaScope.primitiveLong;
 			break;
 		}
 		return i;
@@ -924,59 +926,59 @@ public final class MethodImplementationTranslator {
 		switch (i3.getOpcode()) {
 		case AGET:
 			i.opcode_aux = Instruction.OP_ARRAY_GET;
-			i.type = ClassInfo.globalScope.primitiveVoid;
+			i.type = javaScope.primitiveVoid;
 			break;
 		case AGET_WIDE:
 			i.opcode_aux = Instruction.OP_ARRAY_GET;
-			i.type = ClassInfo.globalScope.primitiveWide;
+			i.type = javaScope.primitiveWide;
 			break;
 		case AGET_OBJECT:
 			i.opcode_aux = Instruction.OP_ARRAY_GET;
-			i.type = ClassInfo.globalScope.rootObject;
+			i.type = javaScope.rootObject;
 			break;
 		case AGET_BOOLEAN:
 			i.opcode_aux = Instruction.OP_ARRAY_GET;
-			i.type = ClassInfo.globalScope.primitiveBoolean;
+			i.type = javaScope.primitiveBoolean;
 			break;
 		case AGET_BYTE:
 			i.opcode_aux = Instruction.OP_ARRAY_GET;
-			i.type = ClassInfo.globalScope.primitiveByte;
+			i.type = javaScope.primitiveByte;
 			break;
 		case AGET_CHAR:
 			i.opcode_aux = Instruction.OP_ARRAY_GET;
-			i.type = ClassInfo.globalScope.primitiveChar;
+			i.type = javaScope.primitiveChar;
 			break;
 		case AGET_SHORT:
 			i.opcode_aux = Instruction.OP_ARRAY_GET;
-			i.type = ClassInfo.globalScope.primitiveShort;
+			i.type = javaScope.primitiveShort;
 			break;
 		case APUT:
 			i.opcode_aux = Instruction.OP_ARRAY_PUT;
-			i.type = ClassInfo.globalScope.primitiveVoid;
+			i.type = javaScope.primitiveVoid;
 			break;
 		case APUT_WIDE:
 			i.opcode_aux = Instruction.OP_ARRAY_PUT;
-			i.type = ClassInfo.globalScope.primitiveWide;
+			i.type = javaScope.primitiveWide;
 			break;
 		case APUT_OBJECT:
 			i.opcode_aux = Instruction.OP_ARRAY_PUT;
-			i.type = ClassInfo.globalScope.rootObject;
+			i.type = javaScope.rootObject;
 			break;
 		case APUT_BOOLEAN:
 			i.opcode_aux = Instruction.OP_ARRAY_PUT;
-			i.type = ClassInfo.globalScope.primitiveBoolean;
+			i.type = javaScope.primitiveBoolean;
 			break;
 		case APUT_BYTE:
 			i.opcode_aux = Instruction.OP_ARRAY_PUT;
-			i.type = ClassInfo.globalScope.primitiveByte;
+			i.type = javaScope.primitiveByte;
 			break;
 		case APUT_CHAR:
 			i.opcode_aux = Instruction.OP_ARRAY_PUT;
-			i.type = ClassInfo.globalScope.primitiveChar;
+			i.type = javaScope.primitiveChar;
 			break;
 		case APUT_SHORT:
 			i.opcode_aux = Instruction.OP_ARRAY_PUT;
-			i.type = ClassInfo.globalScope.primitiveShort;
+			i.type = javaScope.primitiveShort;
 			break;
 		}
 		return i;
@@ -995,59 +997,59 @@ public final class MethodImplementationTranslator {
 		switch (i2.getOpcode()) {
 		case IGET:
 			i.opcode_aux = Instruction.OP_INSTANCE_GET_FIELD;
-			i.type = ClassInfo.globalScope.primitiveVoid;
+			i.type = javaScope.primitiveVoid;
 			break;
 		case IGET_WIDE:
 			i.opcode_aux = Instruction.OP_INSTANCE_GET_FIELD;
-			i.type = ClassInfo.globalScope.primitiveWide;
+			i.type = javaScope.primitiveWide;
 			break;
 		case IGET_OBJECT:
 			i.opcode_aux = Instruction.OP_INSTANCE_GET_FIELD;
-			i.type = ClassInfo.globalScope.rootObject;
+			i.type = javaScope.rootObject;
 			break;
 		case IGET_BOOLEAN:
 			i.opcode_aux = Instruction.OP_INSTANCE_GET_FIELD;
-			i.type = ClassInfo.globalScope.primitiveBoolean;
+			i.type = javaScope.primitiveBoolean;
 			break;
 		case IGET_BYTE:
 			i.opcode_aux = Instruction.OP_INSTANCE_GET_FIELD;
-			i.type = ClassInfo.globalScope.primitiveByte;
+			i.type = javaScope.primitiveByte;
 			break;
 		case IGET_CHAR:
 			i.opcode_aux = Instruction.OP_INSTANCE_GET_FIELD;
-			i.type = ClassInfo.globalScope.primitiveChar;
+			i.type = javaScope.primitiveChar;
 			break;
 		case IGET_SHORT:
 			i.opcode_aux = Instruction.OP_INSTANCE_GET_FIELD;
-			i.type = ClassInfo.globalScope.primitiveShort;
+			i.type = javaScope.primitiveShort;
 			break;
 		case IPUT:
 			i.opcode_aux = Instruction.OP_INSTANCE_PUT_FIELD;
-			i.type = ClassInfo.globalScope.primitiveVoid;
+			i.type = javaScope.primitiveVoid;
 			break;
 		case IPUT_WIDE:
 			i.opcode_aux = Instruction.OP_INSTANCE_PUT_FIELD;
-			i.type = ClassInfo.globalScope.primitiveWide;
+			i.type = javaScope.primitiveWide;
 			break;
 		case IPUT_OBJECT:
 			i.opcode_aux = Instruction.OP_INSTANCE_PUT_FIELD;
-			i.type = ClassInfo.globalScope.rootObject;
+			i.type = javaScope.rootObject;
 			break;
 		case IPUT_BOOLEAN:
 			i.opcode_aux = Instruction.OP_INSTANCE_PUT_FIELD;
-			i.type = ClassInfo.globalScope.primitiveBoolean;
+			i.type = javaScope.primitiveBoolean;
 			break;
 		case IPUT_BYTE:
 			i.opcode_aux = Instruction.OP_INSTANCE_PUT_FIELD;
-			i.type = ClassInfo.globalScope.primitiveByte;
+			i.type = javaScope.primitiveByte;
 			break;
 		case IPUT_CHAR:
 			i.opcode_aux = Instruction.OP_INSTANCE_PUT_FIELD;
-			i.type = ClassInfo.globalScope.primitiveChar;
+			i.type = javaScope.primitiveChar;
 			break;
 		case IPUT_SHORT:
 			i.opcode_aux = Instruction.OP_INSTANCE_PUT_FIELD;
-			i.type = ClassInfo.globalScope.primitiveShort;
+			i.type = javaScope.primitiveShort;
 			break;
 		}
 		return i;
@@ -1065,59 +1067,59 @@ public final class MethodImplementationTranslator {
 		switch (i1.getOpcode()) {
 		case SGET:
 			i.opcode_aux = Instruction.OP_STATIC_GET_FIELD;
-			i.type = ClassInfo.globalScope.primitiveVoid;
+			i.type = javaScope.primitiveVoid;
 			break;
 		case SGET_WIDE:
 			i.opcode_aux = Instruction.OP_STATIC_GET_FIELD;
-			i.type = ClassInfo.globalScope.primitiveWide;
+			i.type = javaScope.primitiveWide;
 			break;
 		case SGET_OBJECT:
 			i.opcode_aux = Instruction.OP_STATIC_GET_FIELD;
-			i.type = ClassInfo.globalScope.rootObject;
+			i.type = javaScope.rootObject;
 			break;
 		case SGET_BOOLEAN:
 			i.opcode_aux = Instruction.OP_STATIC_GET_FIELD;
-			i.type = ClassInfo.globalScope.primitiveBoolean;
+			i.type = javaScope.primitiveBoolean;
 			break;
 		case SGET_BYTE:
 			i.opcode_aux = Instruction.OP_STATIC_GET_FIELD;
-			i.type = ClassInfo.globalScope.primitiveByte;
+			i.type = javaScope.primitiveByte;
 			break;
 		case SGET_CHAR:
 			i.opcode_aux = Instruction.OP_STATIC_GET_FIELD;
-			i.type = ClassInfo.globalScope.primitiveChar;
+			i.type = javaScope.primitiveChar;
 			break;
 		case SGET_SHORT:
 			i.opcode_aux = Instruction.OP_STATIC_GET_FIELD;
-			i.type = ClassInfo.globalScope.primitiveShort;
+			i.type = javaScope.primitiveShort;
 			break;
 		case SPUT:
 			i.opcode_aux = Instruction.OP_STATIC_PUT_FIELD;
-			i.type = ClassInfo.globalScope.primitiveVoid;
+			i.type = javaScope.primitiveVoid;
 			break;
 		case SPUT_WIDE:
 			i.opcode_aux = Instruction.OP_STATIC_PUT_FIELD;
-			i.type = ClassInfo.globalScope.primitiveWide;
+			i.type = javaScope.primitiveWide;
 			break;
 		case SPUT_OBJECT:
 			i.opcode_aux = Instruction.OP_STATIC_PUT_FIELD;
-			i.type = ClassInfo.globalScope.rootObject;
+			i.type = javaScope.rootObject;
 			break;
 		case SPUT_BOOLEAN:
 			i.opcode_aux = Instruction.OP_STATIC_PUT_FIELD;
-			i.type = ClassInfo.globalScope.primitiveBoolean;
+			i.type = javaScope.primitiveBoolean;
 			break;
 		case SPUT_BYTE:
 			i.opcode_aux = Instruction.OP_STATIC_PUT_FIELD;
-			i.type = ClassInfo.globalScope.primitiveByte;
+			i.type = javaScope.primitiveByte;
 			break;
 		case SPUT_CHAR:
 			i.opcode_aux = Instruction.OP_STATIC_PUT_FIELD;
-			i.type = ClassInfo.globalScope.primitiveChar;
+			i.type = javaScope.primitiveChar;
 			break;
 		case SPUT_SHORT:
 			i.opcode_aux = Instruction.OP_STATIC_PUT_FIELD;
-			i.type = ClassInfo.globalScope.primitiveShort;
+			i.type = javaScope.primitiveShort;
 			break;
 		}
 		return i;
@@ -1133,7 +1135,7 @@ public final class MethodImplementationTranslator {
 			realArgs[i++] = args[j++];
 		for (ClassInfo ci: mi.paramTypes) {
 			realArgs[i++] = args[j++];
-			if (ci == ClassInfo.globalScope.primitiveLong || ci == ClassInfo.globalScope.primitiveDouble)
+			if (ci == javaScope.primitiveLong || ci == javaScope.primitiveDouble)
 				++j;
 		}
 		Log.doAssert(j == args.length, "argument size mismatch");
@@ -1208,7 +1210,7 @@ public final class MethodImplementationTranslator {
 			final List<Number> elements = ((ArrayPayload) p).getArrayElements();
 			final PrimitiveInfo[] array = new PrimitiveInfo[elements.size()];
 			for (int j = 0; j < array.length; ++j) {
-				array[j] = PrimitiveInfo.fromObject(elements.get(j));
+				array[j] = PrimitiveInfo.fromObject(javaScope, elements.get(j));
 			}
 			i.extra = array;
 		} else if (opcode == Opcode.PACKED_SWITCH_PAYLOAD ||
@@ -1274,8 +1276,8 @@ public final class MethodImplementationTranslator {
 			if (!mi.isStatic()) {
 				args = new int[mi.paramTypes.length + 1];
 				for (int i = mi.paramTypes.length - 1; i >= 0; --i) {
-					if (mi.paramTypes[i] == ClassInfo.globalScope.primitiveLong ||
-							mi.paramTypes[i] == ClassInfo.globalScope.primitiveDouble)
+					if (mi.paramTypes[i] == javaScope.primitiveLong ||
+							mi.paramTypes[i] == javaScope.primitiveDouble)
 						--reg;
 					args[i + 1] = --reg;
 				}
@@ -1283,8 +1285,8 @@ public final class MethodImplementationTranslator {
 			} else {
 				args = new int[mi.paramTypes.length];
 				for (int i = mi.paramTypes.length - 1; i >= 0; --i) {
-					if (mi.paramTypes[i] == ClassInfo.globalScope.primitiveLong ||
-							mi.paramTypes[i] == ClassInfo.globalScope.primitiveDouble)
+					if (mi.paramTypes[i] == javaScope.primitiveLong ||
+							mi.paramTypes[i] == javaScope.primitiveDouble)
 						--reg;
 					args[i] = --reg;
 				}

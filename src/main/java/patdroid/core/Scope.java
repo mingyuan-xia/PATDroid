@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Scope {
     private final ConcurrentHashMap<String, ClassInfo> classes = new ConcurrentHashMap<String, ClassInfo>();
     public ClassInfo findClass(String fullName) { return classes.get(fullName); }
-    public ClassInfo createClass(String fullName) { ClassInfo ci = new ClassInfo(fullName); classes.put(fullName, ci); return ci; }
+    public ClassInfo createClass(String fullName) { ClassInfo ci = new ClassInfo(this, fullName); classes.put(fullName, ci); return ci; }
     public boolean hasClass(ClassInfo ci) { return classes.containsValue(ci); }
     public Collection<ClassInfo> getAllClasses() { return classes.values(); }
     public Collection<String> getAllClassNames() { return classes.keySet(); }
