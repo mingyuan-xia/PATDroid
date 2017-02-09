@@ -60,11 +60,17 @@ public class RegTest {
         if (updateDump) {
             this.dumpWriter.close();
         }
-        ClassInfo.globalScope.clear();
+        ClassInfo.globalScope.reset();
     }
 
     @Test
     public void run() throws IOException {
+        if (updateDump) {
+            logger.info("Updating dump for " + apkFile);
+        } else {
+            logger.info("Running regression test for " + apkFile);
+        }
+
         SmaliClassDetailLoader.getFrameworkClassLoader(API_LEVEL).loadAll();
         new SmaliClassDetailLoader(new ZipFile(apkFile), true).loadAll();
 
@@ -88,7 +94,7 @@ public class RegTest {
     }
 
     private void handleEntry(String entry) throws IOException {
-        for (String line : entry.split(System.lineSeparator())) {
+        for (String line : entry.split(System.getProperty("line.separator"))) {
             ++lineNumber;
             if (updateDump) {
                 this.dumpWriter.write(line);
@@ -108,11 +114,6 @@ public class RegTest {
         }
         String updateDumpProperty = System.getProperty("regtest.updatedump", "");
         boolean updateDump = updateDumpProperty.equalsIgnoreCase("true");
-        if (updateDump) {
-            logger.info("Updating dump for apks in " + apkPath);
-        } else {
-            logger.info("Running regression test for apks in " + apkPath);
-        }
         File apkDir = new File(apkPath);
         File[] apkFiles = apkDir.listFiles(new PatternFilenameFilter("^.*.apk"));
         ImmutableList.Builder<Object[]> params = ImmutableList.builder();

@@ -23,14 +23,14 @@ public class ReflectionClassDetailLoader extends ClassDetailLoader {
         } else {
             c = Class.forName(fullName);
         }
-        ClassInfo superClass = ClassInfo.findOrCreateClass(c.getSuperclass());
+        ClassInfo superClass = ClassInfo.globalScope.findOrCreateClass(c.getSuperclass());
 		/*
 		 * Java spec: When an interface has no direct SuperInterface , it will
 		 * create abstract public method for all those public methods present in
 		 * the Object class
 		 */
         if (superClass == null && c.isInterface()) {
-            superClass = ClassInfo.rootObject;
+            superClass = ClassInfo.globalScope.rootObject;
         }
 
         ArrayList<MethodInfo> methods = new ArrayList<MethodInfo>();
@@ -42,15 +42,15 @@ public class ReflectionClassDetailLoader extends ClassDetailLoader {
         HashMap<String, ClassInfo> staticFields = new HashMap<String, ClassInfo>();
         for (Field f : raw_fields) {
             if (Modifier.isStatic(f.getModifiers())) {
-                staticFields.put(f.getName(), ClassInfo.findOrCreateClass(f.getType()));
+                staticFields.put(f.getName(), ClassInfo.globalScope.findOrCreateClass(f.getType()));
                 hasStaticFields = true;
             } else {
-                fields.put(f.getName(), ClassInfo.findOrCreateClass(f.getType()));
+                fields.put(f.getName(), ClassInfo.globalScope.findOrCreateClass(f.getType()));
             }
         }
         if (hasStaticFields) {
             methods.add(new MethodInfo(ci, MethodInfo.STATIC_INITIALIZER,
-                    ClassInfo.primitiveVoid, new ClassInfo[0], Modifier.STATIC));
+                    ClassInfo.globalScope.primitiveVoid, new ClassInfo[0], Modifier.STATIC));
         }
         // TODO: do we actually need this?? I think the synthetic fields are included in declared fields
         // see http://www.public.iastate.edu/~java/docs/guide/innerclasses/html/innerclasses.doc.html
@@ -63,8 +63,8 @@ public class ReflectionClassDetailLoader extends ClassDetailLoader {
         // transform the class methods
         for (Method m : c.getDeclaredMethods()) {
             String name = m.getName();
-            ClassInfo returnType = ClassInfo.findOrCreateClass(m.getReturnType());
-            ClassInfo[] paramTypes = ClassInfo.findOrCreateClass(m.getParameterTypes());
+            ClassInfo returnType = ClassInfo.globalScope.findOrCreateClass(m.getReturnType());
+            ClassInfo[] paramTypes = ClassInfo.globalScope.findOrCreateClass(m.getParameterTypes());
             methods.add(new MethodInfo(ci, name, returnType, paramTypes,
                     m.getModifiers()));
         }
@@ -72,8 +72,8 @@ public class ReflectionClassDetailLoader extends ClassDetailLoader {
         // transform the class constructors
         for (Constructor<?> m : c.getDeclaredConstructors()) {
             String name = MethodInfo.CONSTRUCTOR;
-            ClassInfo returnType = ClassInfo.primitiveVoid;
-            ClassInfo[] paramTypes = ClassInfo.findOrCreateClass(m.getParameterTypes());
+            ClassInfo returnType = ClassInfo.globalScope.primitiveVoid;
+            ClassInfo[] paramTypes = ClassInfo.globalScope.findOrCreateClass(m.getParameterTypes());
             methods.add(new MethodInfo(ci, name, returnType,
                     paramTypes, m.getModifiers()));
         }
@@ -82,7 +82,7 @@ public class ReflectionClassDetailLoader extends ClassDetailLoader {
         Class<?>[] raw_interfaces = c.getInterfaces();
         ClassInfo[] interfaces = new ClassInfo[raw_interfaces.length];
         for (int i = 0; i < raw_interfaces.length; ++i) {
-            interfaces[i] = ClassInfo.findOrCreateClass(raw_interfaces[i]);
+            interfaces[i] = ClassInfo.globalScope.findOrCreateClass(raw_interfaces[i]);
         }
 
         // loaded as a framework class

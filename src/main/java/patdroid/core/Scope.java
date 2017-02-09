@@ -23,5 +23,6 @@ public class Scope {
         ClassInfo u = findClass(fullName);
         return (u == null ? createClass(fullName) : u);
     }
-    public void clear() { classes.clear(); }
+    // TODO(iceboy): Remove this method.
+    public void reset() { classes.clear(); }
 }

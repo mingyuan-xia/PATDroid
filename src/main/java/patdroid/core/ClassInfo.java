@@ -36,36 +36,9 @@ import patdroid.util.Log;
  * ClassInfos are obtained by find-series functions not created by constructors.
  */
 public final class ClassInfo {
-	public static final Scope globalScope = new Scope();
+	public static final JavaScope globalScope = new JavaScope();
 	public static ClassDetailLoader rootDetailLoader = new ClassDetailLoader();
-	public static final ClassInfo rootObject = findOrCreateClass(java.lang.Object.class);
-	public static final ClassInfo primitiveWide = findOrCreateClass("AndroidWide");
-	public static final ClassInfo primitiveVoid = findOrCreateClass(void.class);
-	public static final ClassInfo primitiveLong = findOrCreateClass(long.class);
-	public static final ClassInfo primitiveBoolean = findOrCreateClass(boolean.class);
-	public static final ClassInfo primitiveByte = findOrCreateClass(byte.class);
-	public static final ClassInfo primitiveInt = findOrCreateClass(int.class);
-	public static final ClassInfo primitiveShort = findOrCreateClass(short.class);
-	public static final ClassInfo primitiveChar = findOrCreateClass(char.class);
-	public static final ClassInfo primitiveDouble = findOrCreateClass(double.class);
-	public static final ClassInfo primitiveFloat = findOrCreateClass(float.class);
 
-	private static final Set<ClassInfo> primitives;
-	static {
-		HashSet<ClassInfo> h = new HashSet<ClassInfo>();
-		h.add(primitiveWide);
-		h.add(primitiveVoid);
-		h.add(primitiveLong);
-		h.add(primitiveBoolean);
-		h.add(primitiveByte);
-		h.add(primitiveInt);
-		h.add(primitiveShort);
-		h.add(primitiveChar);
-		h.add(primitiveDouble);
-		h.add(primitiveFloat);
-		primitives = Collections.unmodifiableSet(h);
-	}
-	
 	/**
 	 * The Java canonical class name
 	 */
@@ -86,10 +59,10 @@ public final class ClassInfo {
 	}
 
 	/**
-	 * Find a class with given name
-	 * @param fullName the full name of the class
-	 * @return the class or null if not found
-	 */
+	  * Find a class with given name
+	  * @param fullName the full name of the class
+	  * @return the class or null if not found
+	  */
 	public static ClassInfo findClass(String fullName) {
 		return globalScope.findClass(fullName);
 	}
@@ -100,7 +73,7 @@ public final class ClassInfo {
 	 * @return the class found or just created
 	 */
 	public static ClassInfo findOrCreateClass(String fullName) {
-		ClassInfo u = findClass(fullName);
+		ClassInfo u = globalScope.findClass(fullName);
 		if (u == null) {
 			// create a new class
 			u = globalScope.createClass(fullName);
@@ -120,28 +93,6 @@ public final class ClassInfo {
 		return a;
 	}
 
-	/**
-	 * Find or create a class representation
-	 * @param c the java Class object
-	 * @return the class found or just created
-	 */
-	public static ClassInfo findOrCreateClass(Class<?> c) {
-		return (c == null ? null: ClassInfo.findOrCreateClass(c.getName()));
-	}
-
-	/**
-	 * Find or create a list of class representations
-	 * @param l the list of java Class objects
-	 * @return the list of class representations
-	 */
-	public static ClassInfo[] findOrCreateClass(Class<?>[] l) {
-		final ClassInfo[] a = new ClassInfo[l.length];
-		for (int i = 0; i < a.length; ++i) {
-			a[i] = findOrCreateClass(l[i]);
-		}
-		return a;
-	}
-	
 	/**
 	 * Dump the class hierarchy
 	 * @return a String containing all the classes in the global scope
@@ -252,7 +203,7 @@ public final class ClassInfo {
 	 * @return the method representation, or null if not found or the class is missing
 	 */
 	public MethodInfo findMethodHere(String name, Class<?>... paramTypes) {
-		return findMethodHere(name, ClassInfo.findOrCreateClass(paramTypes));
+		return findMethodHere(name, globalScope.findOrCreateClass(paramTypes));
 	}
 	
 	/**
@@ -311,7 +262,7 @@ public final class ClassInfo {
 	 * @return the method representation, or null if not found or the class is missing
 	 */
 	public MethodInfo findMethod(String name, Class<?>... paramTypes) {
-		return findMethod(name, ClassInfo.findOrCreateClass(paramTypes));
+		return findMethod(name, globalScope.findOrCreateClass(paramTypes));
 	}
 	
 	/**
@@ -324,7 +275,7 @@ public final class ClassInfo {
 	 */
 	public boolean isConvertibleTo(ClassInfo type) {
 		if (type.isPrimitive()) {
-			return (type == ClassInfo.primitiveVoid || isPrimitive());
+			return (type == globalScope.primitiveVoid || isPrimitive());
 		} else {
 			return getDetails().isConvertibleTo(type);
 		}
@@ -355,15 +306,15 @@ public final class ClassInfo {
 		Log.doAssert(isArray(), "Try getting the element class of a non-array class " + this);
 		final char first = fullName.charAt(1);
 		switch (first) {
-		case 'C': return primitiveChar;
-		case 'I': return primitiveInt;
-		case 'B': return primitiveByte;
-		case 'Z': return primitiveBoolean;
-		case 'F': return primitiveFloat;
-		case 'D': return primitiveDouble;
-		case 'S': return primitiveShort;
-		case 'J': return primitiveLong;
-		case 'V': return primitiveVoid;
+		case 'C': return globalScope.primitiveChar;
+		case 'I': return globalScope.primitiveInt;
+		case 'B': return globalScope.primitiveByte;
+		case 'Z': return globalScope.primitiveBoolean;
+		case 'F': return globalScope.primitiveFloat;
+		case 'D': return globalScope.primitiveDouble;
+		case 'S': return globalScope.primitiveShort;
+		case 'J': return globalScope.primitiveLong;
+		case 'V': return globalScope.primitiveVoid;
 		case 'L': return ClassInfo.findOrCreateClass(fullName.substring(2, fullName.length() - 1));
 		case '[': return ClassInfo.findOrCreateClass(fullName.substring(1));
 		default:
@@ -418,7 +369,7 @@ public final class ClassInfo {
 	 * @return true if the class is a primitive type
 	 */
 	public boolean isPrimitive() {
-		return primitives.contains(this);
+		return globalScope.primitives.contains(this);
 	}
 
 	/**

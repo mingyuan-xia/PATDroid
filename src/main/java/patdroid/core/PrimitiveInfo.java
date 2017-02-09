@@ -35,14 +35,14 @@ public final class PrimitiveInfo {
 	public static Map<ClassInfo, PrimitiveInfo> primitiveZeros;
 	static {
 		HashMap<ClassInfo, PrimitiveInfo> t = new HashMap<ClassInfo, PrimitiveInfo>();
-		t.put(ClassInfo.primitiveVoid, new PrimitiveInfo(0));
-		t.put(ClassInfo.primitiveLong, new PrimitiveInfo(0l));
-		t.put(ClassInfo.primitiveBoolean, new PrimitiveInfo(false));
-		t.put(ClassInfo.primitiveByte, new PrimitiveInfo((byte)0));
-		t.put(ClassInfo.primitiveInt, new PrimitiveInfo(0));
-		t.put(ClassInfo.primitiveChar, new PrimitiveInfo('\0'));
-		t.put(ClassInfo.primitiveDouble, new PrimitiveInfo(0.0));
-		t.put(ClassInfo.primitiveFloat, new PrimitiveInfo(0f));
+		t.put(ClassInfo.globalScope.primitiveVoid, new PrimitiveInfo(0));
+		t.put(ClassInfo.globalScope.primitiveLong, new PrimitiveInfo(0l));
+		t.put(ClassInfo.globalScope.primitiveBoolean, new PrimitiveInfo(false));
+		t.put(ClassInfo.globalScope.primitiveByte, new PrimitiveInfo((byte)0));
+		t.put(ClassInfo.globalScope.primitiveInt, new PrimitiveInfo(0));
+		t.put(ClassInfo.globalScope.primitiveChar, new PrimitiveInfo('\0'));
+		t.put(ClassInfo.globalScope.primitiveDouble, new PrimitiveInfo(0.0));
+		t.put(ClassInfo.globalScope.primitiveFloat, new PrimitiveInfo(0f));
 		primitiveZeros = Collections.unmodifiableMap(t);
 	}
 	
@@ -80,23 +80,23 @@ public final class PrimitiveInfo {
 	 * @param value the value
 	 */
 	public PrimitiveInfo(int value) {
-		this(ClassInfo.primitiveInt, value, 0);
+		this(ClassInfo.globalScope.primitiveInt, value, 0);
 	}
 
 	public PrimitiveInfo(long value) {
-		this(ClassInfo.primitiveLong, value);
+		this(ClassInfo.globalScope.primitiveLong, value);
 	}
 
 	public PrimitiveInfo(double value) {
-		this(ClassInfo.primitiveDouble, Double.doubleToLongBits(value));
+		this(ClassInfo.globalScope.primitiveDouble, Double.doubleToLongBits(value));
 	}
 
 	public PrimitiveInfo(float value) {
-		this(ClassInfo.primitiveFloat, Float.floatToIntBits(value), 0);
+		this(ClassInfo.globalScope.primitiveFloat, Float.floatToIntBits(value), 0);
 	}
 
 	public PrimitiveInfo(boolean value) {
-		this(ClassInfo.primitiveBoolean, value ? 1 : 0, 0);
+		this(ClassInfo.globalScope.primitiveBoolean, value ? 1 : 0, 0);
 	}
 
 	/**
@@ -161,8 +161,10 @@ public final class PrimitiveInfo {
 
 	public PrimitiveInfo unsafeCastTo(ClassInfo target_type) {
 		Log.doAssert(target_type.isPrimitive(), "must cast to a primitive type");
-		if (target_type == ClassInfo.primitiveChar || target_type == ClassInfo.primitiveShort || target_type == ClassInfo.primitiveByte) {
-			target_type = ClassInfo.primitiveInt;
+		if (target_type == ClassInfo.globalScope.primitiveChar ||
+				target_type == ClassInfo.globalScope.primitiveShort ||
+                target_type == ClassInfo.globalScope.primitiveByte) {
+			target_type = ClassInfo.globalScope.primitiveInt;
 		}
 		return new PrimitiveInfo(target_type, low32, high32);
 	}
@@ -170,7 +172,7 @@ public final class PrimitiveInfo {
 	public final PrimitiveInfo castTo(ClassInfo target_type) {
 		Log.doAssert(target_type.isPrimitive(), "must cast to a primitive type");
 		PrimitiveInfo v = null;
-		if (target_type == ClassInfo.primitiveInt) {
+		if (target_type == ClassInfo.globalScope.primitiveInt) {
 			int val = 0;
 			if (isLong()) {
 				val = (int) longValue();
@@ -184,7 +186,7 @@ public final class PrimitiveInfo {
 				val = (int) doubleValue();
 			}
 			v = new PrimitiveInfo(val);
-		} else if (target_type == ClassInfo.primitiveLong) {
+		} else if (target_type == ClassInfo.globalScope.primitiveLong) {
 			long val = 0l;
 			if (isLong()) {
 				val = (long) longValue();
@@ -198,7 +200,7 @@ public final class PrimitiveInfo {
 				val = (long) doubleValue();
 			}
 			v = new PrimitiveInfo(val);
-		} else if (target_type == ClassInfo.primitiveFloat) {
+		} else if (target_type == ClassInfo.globalScope.primitiveFloat) {
 			float val = 0f;
 			if (isLong()) {
 				val = (float) longValue();
@@ -212,7 +214,7 @@ public final class PrimitiveInfo {
 				val = (float) doubleValue();
 			}
 			v = new PrimitiveInfo(val);
-		} else if (target_type == ClassInfo.primitiveDouble) {
+		} else if (target_type == ClassInfo.globalScope.primitiveDouble) {
 			double val = 0.0;
 			if (isLong()) {
 				val = (double) longValue();
@@ -227,37 +229,37 @@ public final class PrimitiveInfo {
 			}
 			v = new PrimitiveInfo(val);
 		} else { // short, boolean, char, byte
-			v = new PrimitiveInfo(ClassInfo.primitiveInt, this.low32);
+			v = new PrimitiveInfo(ClassInfo.globalScope.primitiveInt, this.low32);
 		}
 		return v;
 	}
 
 	public static PrimitiveInfo twoIntsToDouble(int vlow, int vhigh) {
-		return new PrimitiveInfo(ClassInfo.primitiveDouble, vlow, vhigh);
+		return new PrimitiveInfo(ClassInfo.globalScope.primitiveDouble, vlow, vhigh);
 	}
 
 	public static PrimitiveInfo twoIntsToLong(int vlow, int vhigh) {
-		return new PrimitiveInfo(ClassInfo.primitiveLong, vlow, vhigh);
+		return new PrimitiveInfo(ClassInfo.globalScope.primitiveLong, vlow, vhigh);
 	}
 
 	public final boolean isInteger() {
-		return kind == ClassInfo.primitiveInt;
+		return kind == ClassInfo.globalScope.primitiveInt;
 	}
 
 	public final boolean isLong() {
-		return kind == ClassInfo.primitiveLong;
+		return kind == ClassInfo.globalScope.primitiveLong;
 	}
 	
 	public final boolean isDouble() {
-		return kind == ClassInfo.primitiveDouble;
+		return kind == ClassInfo.globalScope.primitiveDouble;
 	}
 
 	public final boolean isFloat() {
-		return kind == ClassInfo.primitiveFloat;
+		return kind == ClassInfo.globalScope.primitiveFloat;
 	}
 
 	public final boolean isBoolean() {
-		return kind == ClassInfo.primitiveBoolean;
+		return kind == ClassInfo.globalScope.primitiveBoolean;
 	}
 
 	public final boolean isZero() {

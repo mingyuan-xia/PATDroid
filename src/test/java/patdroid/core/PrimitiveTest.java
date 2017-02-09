@@ -15,7 +15,7 @@ public class PrimitiveTest {
 
     @Test
     public void testConversion() {
-        Assert.assertTrue(new PrimitiveInfo(15).castTo(ClassInfo.primitiveLong).longValue() == 15l);
-        Assert.assertTrue(new PrimitiveInfo(15.0).castTo(ClassInfo.primitiveInt).intValue() == 15);
+        Assert.assertTrue(new PrimitiveInfo(15).castTo(ClassInfo.globalScope.primitiveLong).longValue() == 15l);
+        Assert.assertTrue(new PrimitiveInfo(15.0).castTo(ClassInfo.globalScope.primitiveInt).intValue() == 15);
     }
 }
