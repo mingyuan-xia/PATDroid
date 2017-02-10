@@ -23,12 +23,12 @@ public class Main {
         }
         Scope scope = new Scope();
         // load all framework classes, choose an API level installed
-        SmaliClassDetailLoader.getFrameworkClassLoader(scope, 19).loadAll();
+        SmaliClassDetailLoader.fromFramework(19).loadAll(scope);
         // pick an apk
         ZipFile apkFile = new ZipFile(new File(args[0]));
         // load all classes, methods, fields and instructions from an apk
         // we are using smali as the underlying engine
-        new SmaliClassDetailLoader(scope, apkFile, true).loadAll();
+        SmaliClassDetailLoader.fromApkFile(apkFile, true).loadAll(scope);
         // get the class representation for the MainActivity class in the apk
         for (ClassInfo c : scope.getAllClasses()) {
             if (!c.isFrameworkClass()) {

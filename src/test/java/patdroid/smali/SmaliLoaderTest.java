@@ -9,12 +9,12 @@ public class SmaliLoaderTest {
 
     @Test
     public void testLoadFrameworkClasses() {
-        SmaliClassDetailLoader ldr = SmaliClassDetailLoader.getFrameworkClassLoader(scope, 19);
+        SmaliClassDetailLoader ldr = SmaliClassDetailLoader.fromFramework(19);
         if (ldr == null) {
             System.out.println("framework classes loader test skipped, API19 not available");
             return ;
         }
-        ldr.loadAll();
+        ldr.loadAll(scope);
         Assert.assertNotNull(scope.findClass("android.app.Activity"));
         Assert.assertNotNull(scope.findClass("android.view.View"));
         Assert.assertNull(scope.findClass("android.bluetooth.le.ScanResult")); // api21

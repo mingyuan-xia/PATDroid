@@ -73,8 +73,8 @@ public class RegTest {
             logger.info("Running regression test for " + apkFile);
         }
 
-        SmaliClassDetailLoader.getFrameworkClassLoader(scope, API_LEVEL).loadAll();
-        new SmaliClassDetailLoader(scope, new ZipFile(apkFile), true).loadAll();
+        SmaliClassDetailLoader.fromFramework(API_LEVEL).loadAll(scope);
+        SmaliClassDetailLoader.fromApkFile(new ZipFile(apkFile), true).loadAll(scope);
 
         List<ClassInfo> sortedClasses = Ordering.usingToString().sortedCopy(scope.getAllClasses());
         for (ClassInfo c : sortedClasses) {

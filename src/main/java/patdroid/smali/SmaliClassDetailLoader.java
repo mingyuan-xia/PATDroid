@@ -33,7 +33,67 @@ import patdroid.dalvik.Dalvik;
  * https://github.com/JesusFreke/smali
  */
 public class SmaliClassDetailLoader extends ClassDetailLoader {
-    public final InvocationResolver resolver;
+    private final DexFile[] dexFiles;
+    private final boolean translateInstructions;
+    private final boolean isFramework;
+    private final InvocationResolver resolver;
+
+    private SmaliClassDetailLoader(DexFile[] dexFiles, boolean translateInstructions, boolean isFramework) {
+        this.dexFiles = dexFiles;
+        this.translateInstructions = translateInstructions;
+        this.isFramework = isFramework;
+        this.resolver = translateInstructions ? new InvocationResolver() : null;
+    }
+
+    /**
+     * Create a loader that loads from an APK file (could contain multiple DEX files), optionally loading instructions
+     * @param apkFile the APK file
+     * @param translateInstructions true if the instructions shall be loaded
+     */
+    public static SmaliClassDetailLoader fromApkFile(ZipFile apkFile, boolean translateInstructions) {
+        ArrayList<ZipEntry> dexEntries = new ArrayList<ZipEntry>();
+        dexEntries.add(apkFile.getEntry("classes.dex"));
+        for (int i = 2; i < 99; ++i) {
+            final ZipEntry e = apkFile.getEntry("classes" + i +".dex");
+            if (e != null) {
+                dexEntries.add(e);
+            } else {
+                break;
+            }
+        }
+        final int n = dexEntries.size();
+        if (n == 0) {
+            Log.err("Source apk does not have any dex files");
+        }
+
+        DexFile[] dexFiles = new DexFile[n];
+        final Opcodes opcodes = Opcodes.forApi(Settings.apiLevel);
+        try {
+            for (int i = 0; i < n; ++i) {
+                dexFiles[i] = DexBackedDexFile.fromInputStream(opcodes,
+                        new BufferedInputStream(apkFile.getInputStream(dexEntries.get(i))));
+            }
+        } catch (IOException e) {
+            Log.err("failed to process the source apk file");
+            Log.err(e);
+        }
+        return new SmaliClassDetailLoader(dexFiles, translateInstructions, false);
+    }
+
+    public static SmaliClassDetailLoader fromFramework(int apiLevel) {
+        File f = new File(Settings.frameworkClassesFolder, "android-" + apiLevel + ".dex");
+        if (!f.exists())
+            return null;
+        DexFile dex = null;
+        try {
+            dex = DexFileFactory.loadDexFile(f, apiLevel);
+        } catch (IOException e) {
+            Log.err("failed to load framework classes");
+            Log.err(e);
+            return null;
+        }
+        return new SmaliClassDetailLoader(new DexFile[] {dex}, false, true);
+    }
 
     @Override
     public void load(ClassInfo ci) throws ClassNotFoundException,
@@ -53,27 +113,10 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         throw new ClassNotFoundException("" + ci.fullName + " not found in the dex file");
     }
 
-    public static SmaliClassDetailLoader getFrameworkClassLoader(Scope scope, int apiLevel) {
-        File f = new File(Settings.frameworkClassesFolder, "android-" + apiLevel + ".dex");
-        if (!f.exists())
-            return null;
-        DexFile dex = null;
-        try {
-            dex = DexFileFactory.loadDexFile(f, apiLevel);
-        } catch (IOException e) {
-            Log.err("failed to load framework classes");
-            Log.err(e);
-            return null;
-        }
-        SmaliClassDetailLoader ldr = new SmaliClassDetailLoader(scope, dex, false);
-        ldr.isFramework = true;
-        return ldr;
-    }
-
     /**
      * Parse an apk file and extract all classes, methods, fields and optionally instructions
      */
-    public void loadAll() {
+    public void loadAll(Scope scope) {
         for (DexFile dexFile: dexFiles) {
             for (final ClassDef classDef : dexFile.getClasses()) {
                 ClassInfo ci = Dalvik.findOrCreateClass(scope, classDef.getType());
@@ -86,95 +129,33 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         }
     }
 
-    private DexFile[] dexFiles;
-    private final Scope scope;
-    private final boolean translateInstructions;
-    private boolean isFramework = false;
-
-    /**
-     * Create a loader that loads everything (including instructions) from an APK file
-     * @param apkFile the APK file
-     */
-    public SmaliClassDetailLoader(Scope scope, ZipFile apkFile) {
-        this(scope, apkFile, true);
-    }
-
-    /**
-     * Create a loader that loads from an APK file (could contain multiple DEX files), optionally loading instructions
-     * @param apkFile the APK file
-     * @param translateInstructions true if the instructions shall be loaded
-     */
-    public SmaliClassDetailLoader(Scope scope, ZipFile apkFile, boolean translateInstructions) {
-        ArrayList<ZipEntry> dexEntries = new ArrayList<ZipEntry>();
-        dexEntries.add(apkFile.getEntry("classes.dex"));
-        for (int i = 2; i < 99; ++i) {
-            final ZipEntry e = apkFile.getEntry("classes" + i +".dex");
-            if (e != null) {
-                dexEntries.add(e);
-            } else {
-                break;
-            }
-        }
-        final int n = dexEntries.size();
-        if (n == 0) {
-            Log.err("Source apk does not have any dex files");
-        }
-
-        this.scope = scope;
-        this.translateInstructions = translateInstructions;
-        this.resolver = translateInstructions ? new InvocationResolver() : null;
-        final Opcodes opcodes = Opcodes.forApi(Settings.apiLevel);
-        try {
-            dexFiles = new DexFile[n];
-            for (int i = 0; i < n; ++i) {
-                dexFiles[i] = DexBackedDexFile.fromInputStream(opcodes,
-                        new BufferedInputStream(apkFile.getInputStream(dexEntries.get(i))));
-            }
-        } catch (IOException e) {
-            Log.err("failed to process the source apk file");
-            Log.err(e);
-        }
-    }
-
-    /**
-     * Create a loader that loads from a single DEX file, optionally loading instructions
-     * @param dexFile the DEX file
-     * @param translateInstructions  true if the instructions shall be loaded
-     */
-    public SmaliClassDetailLoader(Scope scope, DexFile dexFile, boolean translateInstructions) {
-        this.scope = scope;
-        this.dexFiles = new DexFile[] {dexFile};
-        this.translateInstructions = translateInstructions;
-        this.resolver = translateInstructions ? new InvocationResolver() : null;
-    }
-
     private ClassDetail translateClassDef(
             ClassInfo ci, ClassDef classDef) {
         ClassInfo superClass;
         if (classDef.getSuperclass() == null) {
             superClass = null; // for java.lang.Object
         } else {
-            superClass = Dalvik.findOrCreateClass(scope, classDef.getSuperclass());
+            superClass = Dalvik.findOrCreateClass(ci.scope, classDef.getSuperclass());
         }
-        final ClassInfo[] interfaces = findOrCreateClass(scope, classDef.getInterfaces());
+        final ClassInfo[] interfaces = findOrCreateClass(ci.scope, classDef.getInterfaces());
         final int accessFlags = translateAccessFlags(classDef.getAccessFlags());
         final MethodInfo[] methods = translateMethods(ci,
                 classDef.getMethods());
         final HashMap<String, ClassInfo> fields = translateFields(
-                classDef.getInstanceFields());
+                ci.scope, classDef.getInstanceFields());
         // TODO: do we need this?
         if (ci.isInnerClass()) {
             fields.put("this$0", ci.getOuterClass());
         }
         final HashMap<String, ClassInfo> staticFields = translateFields(
-                classDef.getStaticFields());
+                ci.scope, classDef.getStaticFields());
         return createDetail(superClass, interfaces,
                 accessFlags, methods, fields, staticFields, isFramework);
     }
 
     private MethodInfo translateMethod(ClassInfo ci, Method method) {
-        final ClassInfo retType = Dalvik.findOrCreateClass(scope, method.getReturnType());
-        final ClassInfo[] paramTypes = findOrCreateClass(scope, method.getParameterTypes());
+        final ClassInfo retType = Dalvik.findOrCreateClass(ci.scope, method.getReturnType());
+        final ClassInfo[] paramTypes = findOrCreateClass(ci.scope, method.getParameterTypes());
         final int accessFlags = translateAccessFlags(method.getAccessFlags());
         final MethodInfo mi = new MethodInfo(ci, method.getName(),
                 retType, paramTypes, accessFlags);
@@ -184,7 +165,7 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
             final MethodImplementation impl = method.getImplementation();
             // Decode instructions
             if (impl != null) {
-                MethodImplementationTranslator mit = new MethodImplementationTranslator(scope, resolver);
+                MethodImplementationTranslator mit = new MethodImplementationTranslator(ci.scope, resolver);
                 mit.translate(mi, impl);
             }
         }
@@ -202,7 +183,7 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
     }
 
     private HashMap<String, ClassInfo> translateFields(
-            Iterable<? extends Field> fields) {
+            Scope scope, Iterable<? extends Field> fields) {
         HashMap<String, ClassInfo> result = new HashMap<String, ClassInfo>();
         for (Field field: fields) {
             // TODO access flags and initial value are ignored

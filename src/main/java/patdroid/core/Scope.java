@@ -3,7 +3,7 @@ package patdroid.core;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.Collection;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
 
 /**
  * A scope is a container of classes. A scope can be used to represent different entities, which
@@ -11,11 +11,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * Just to like a few things that a scope can stand for:
  * An APK file (as a whole), a Dex file (consider multi-dex), android framework classes (framework.jar)
  * Java core library classes (java.*), app code (e.g. with a specific package name).
- *
+ * <p>
  * Overall it is suggested multiple scopes stay disjoint.
  */
 public class Scope {
-    private final ConcurrentHashMap<String, ClassInfo> classes = new ConcurrentHashMap<String, ClassInfo>();
+    private final HashMap<String, ClassInfo> classes = new HashMap<String, ClassInfo>();
     public final ClassInfo rootObject = findOrCreateClass(java.lang.Object.class);
     public final ClassInfo primitiveWide = findOrCreateClass("AndroidWide");
     public final ClassInfo primitiveVoid = findOrCreateClass(void.class);
@@ -40,8 +40,11 @@ public class Scope {
                     primitiveDouble,
                     primitiveFloat);
 
-    public ClassInfo findClass(String fullName) { return classes.get(fullName); }
-    public ClassInfo createClass(String fullName) {
+    public ClassInfo findClass(String fullName) {
+        return classes.get(fullName);
+    }
+
+    private ClassInfo createClass(String fullName) {
         ClassInfo ci = new ClassInfo(this, fullName);
         classes.put(fullName, ci);
         if (ci.isArray()) {
@@ -49,9 +52,19 @@ public class Scope {
         }
         return ci;
     }
-    public boolean hasClass(ClassInfo ci) { return classes.containsValue(ci); }
-    public Collection<ClassInfo> getAllClasses() { return classes.values(); }
-    public Collection<String> getAllClassNames() { return classes.keySet(); }
+
+    public boolean hasClass(ClassInfo ci) {
+        return classes.containsValue(ci);
+    }
+
+    public Collection<ClassInfo> getAllClasses() {
+        return classes.values();
+    }
+
+    public Collection<String> getAllClassNames() {
+        return classes.keySet();
+    }
+
     public ClassInfo findOrCreateClass(String fullName) {
         ClassInfo u = findClass(fullName);
         return (u == null ? createClass(fullName) : u);
@@ -59,6 +72,7 @@ public class Scope {
 
     /**
      * Find or create a class representation
+     *
      * @param c the java Class object
      * @return the class found or just created
      */
@@ -68,6 +82,7 @@ public class Scope {
 
     /**
      * Find or create a list of class representations
+     *
      * @param l the list of java Class objects
      * @return the list of class representations
      */
