@@ -2,6 +2,7 @@ package patdroid;
 
 import patdroid.core.ClassInfo;
 import patdroid.core.MethodInfo;
+import patdroid.core.Scope;
 import patdroid.smali.SmaliClassDetailLoader;
 
 import java.io.File;
@@ -20,15 +21,16 @@ public class Main {
             System.out.println("Usage: patdroid path/to/apk");
             return;
         }
+        Scope scope = new Scope();
         // load all framework classes, choose an API level installed
-        SmaliClassDetailLoader.getFrameworkClassLoader(ClassInfo.globalScope, 19).loadAll();
+        SmaliClassDetailLoader.getFrameworkClassLoader(scope, 19).loadAll();
         // pick an apk
         ZipFile apkFile = new ZipFile(new File(args[0]));
         // load all classes, methods, fields and instructions from an apk
         // we are using smali as the underlying engine
-        new SmaliClassDetailLoader(ClassInfo.globalScope, apkFile, true).loadAll();
+        new SmaliClassDetailLoader(scope, apkFile, true).loadAll();
         // get the class representation for the MainActivity class in the apk
-        for (ClassInfo c: ClassInfo.globalScope.getAllClasses()) {
+        for (ClassInfo c : scope.getAllClasses()) {
             if (!c.isFrameworkClass()) {
                 System.out.println(c.fullName);
                 for (MethodInfo m: c.getAllMethods()) {

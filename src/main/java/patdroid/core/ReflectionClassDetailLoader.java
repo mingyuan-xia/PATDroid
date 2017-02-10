@@ -12,6 +12,11 @@ import java.util.HashMap;
  * Load that with standard Java reflection
  */
 public class ReflectionClassDetailLoader extends ClassDetailLoader {
+    private final Scope scope;
+
+    public ReflectionClassDetailLoader(Scope scope) {
+        this.scope = scope;
+    }
 
     @Override
     public void load(ClassInfo ci) throws ClassNotFoundException,
@@ -23,14 +28,14 @@ public class ReflectionClassDetailLoader extends ClassDetailLoader {
         } else {
             c = Class.forName(fullName);
         }
-        ClassInfo superClass = ClassInfo.globalScope.findOrCreateClass(c.getSuperclass());
+        ClassInfo superClass = scope.findOrCreateClass(c.getSuperclass());
 		/*
 		 * Java spec: When an interface has no direct SuperInterface , it will
 		 * create abstract public method for all those public methods present in
 		 * the Object class
 		 */
         if (superClass == null && c.isInterface()) {
-            superClass = ClassInfo.globalScope.rootObject;
+            superClass = scope.rootObject;
         }
 
         ArrayList<MethodInfo> methods = new ArrayList<MethodInfo>();
@@ -42,15 +47,15 @@ public class ReflectionClassDetailLoader extends ClassDetailLoader {
         HashMap<String, ClassInfo> staticFields = new HashMap<String, ClassInfo>();
         for (Field f : raw_fields) {
             if (Modifier.isStatic(f.getModifiers())) {
-                staticFields.put(f.getName(), ClassInfo.globalScope.findOrCreateClass(f.getType()));
+                staticFields.put(f.getName(), scope.findOrCreateClass(f.getType()));
                 hasStaticFields = true;
             } else {
-                fields.put(f.getName(), ClassInfo.globalScope.findOrCreateClass(f.getType()));
+                fields.put(f.getName(), scope.findOrCreateClass(f.getType()));
             }
         }
         if (hasStaticFields) {
             methods.add(new MethodInfo(ci, MethodInfo.STATIC_INITIALIZER,
-                    ClassInfo.globalScope.primitiveVoid, new ClassInfo[0], Modifier.STATIC));
+                    scope.primitiveVoid, new ClassInfo[0], Modifier.STATIC));
         }
         // TODO: do we actually need this?? I think the synthetic fields are included in declared fields
         // see http://www.public.iastate.edu/~java/docs/guide/innerclasses/html/innerclasses.doc.html
@@ -63,8 +68,8 @@ public class ReflectionClassDetailLoader extends ClassDetailLoader {
         // transform the class methods
         for (Method m : c.getDeclaredMethods()) {
             String name = m.getName();
-            ClassInfo returnType = ClassInfo.globalScope.findOrCreateClass(m.getReturnType());
-            ClassInfo[] paramTypes = ClassInfo.globalScope.findOrCreateClass(m.getParameterTypes());
+            ClassInfo returnType = scope.findOrCreateClass(m.getReturnType());
+            ClassInfo[] paramTypes = scope.findOrCreateClass(m.getParameterTypes());
             methods.add(new MethodInfo(ci, name, returnType, paramTypes,
                     m.getModifiers()));
         }
@@ -72,8 +77,8 @@ public class ReflectionClassDetailLoader extends ClassDetailLoader {
         // transform the class constructors
         for (Constructor<?> m : c.getDeclaredConstructors()) {
             String name = MethodInfo.CONSTRUCTOR;
-            ClassInfo returnType = ClassInfo.globalScope.primitiveVoid;
-            ClassInfo[] paramTypes = ClassInfo.globalScope.findOrCreateClass(m.getParameterTypes());
+            ClassInfo returnType = scope.primitiveVoid;
+            ClassInfo[] paramTypes = scope.findOrCreateClass(m.getParameterTypes());
             methods.add(new MethodInfo(ci, name, returnType,
                     paramTypes, m.getModifiers()));
         }
@@ -82,7 +87,7 @@ public class ReflectionClassDetailLoader extends ClassDetailLoader {
         Class<?>[] raw_interfaces = c.getInterfaces();
         ClassInfo[] interfaces = new ClassInfo[raw_interfaces.length];
         for (int i = 0; i < raw_interfaces.length; ++i) {
-            interfaces[i] = ClassInfo.globalScope.findOrCreateClass(raw_interfaces[i]);
+            interfaces[i] = scope.findOrCreateClass(raw_interfaces[i]);
         }
 
         // loaded as a framework class

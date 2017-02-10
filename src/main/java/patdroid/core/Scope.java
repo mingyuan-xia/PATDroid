@@ -15,25 +15,31 @@ import java.util.concurrent.ConcurrentHashMap;
  * Overall it is suggested multiple scopes stay disjoint.
  */
 public class Scope {
-    // TODO(iceboy): Make these final.
-    public ClassInfo rootObject;
-    public ClassInfo primitiveWide;
-    public ClassInfo primitiveVoid;
-    public ClassInfo primitiveLong;
-    public ClassInfo primitiveBoolean;
-    public ClassInfo primitiveByte;
-    public ClassInfo primitiveInt;
-    public ClassInfo primitiveShort;
-    public ClassInfo primitiveChar;
-    public ClassInfo primitiveDouble;
-    public ClassInfo primitiveFloat;
-    public ImmutableSet<ClassInfo> primitives;
-
-    public Scope() {
-        reset();
-    }
-
     private final ConcurrentHashMap<String, ClassInfo> classes = new ConcurrentHashMap<String, ClassInfo>();
+    public final ClassInfo rootObject = findOrCreateClass(java.lang.Object.class);
+    public final ClassInfo primitiveWide = findOrCreateClass("AndroidWide");
+    public final ClassInfo primitiveVoid = findOrCreateClass(void.class);
+    public final ClassInfo primitiveLong = findOrCreateClass(long.class);
+    public final ClassInfo primitiveBoolean = findOrCreateClass(boolean.class);
+    public final ClassInfo primitiveByte = findOrCreateClass(byte.class);
+    public final ClassInfo primitiveInt = findOrCreateClass(int.class);
+    public final ClassInfo primitiveShort = findOrCreateClass(short.class);
+    public final ClassInfo primitiveChar = findOrCreateClass(char.class);
+    public final ClassInfo primitiveDouble = findOrCreateClass(double.class);
+    public final ClassInfo primitiveFloat = findOrCreateClass(float.class);
+    public final ImmutableSet<ClassInfo> primitives =
+            ImmutableSet.of(
+                    primitiveWide,
+                    primitiveVoid,
+                    primitiveLong,
+                    primitiveBoolean,
+                    primitiveByte,
+                    primitiveInt,
+                    primitiveShort,
+                    primitiveChar,
+                    primitiveDouble,
+                    primitiveFloat);
+
     public ClassInfo findClass(String fullName) { return classes.get(fullName); }
     public ClassInfo createClass(String fullName) {
         ClassInfo ci = new ClassInfo(this, fullName);
@@ -71,32 +77,5 @@ public class Scope {
             a[i] = findOrCreateClass(l[i]);
         }
         return a;
-    }
-
-    // TODO(iceboy): Remove this method.
-    public void reset() {
-        classes.clear();
-        rootObject = findOrCreateClass(java.lang.Object.class);
-        primitiveWide = findOrCreateClass("AndroidWide");
-        primitiveVoid = findOrCreateClass(void.class);
-        primitiveLong = findOrCreateClass(long.class);
-        primitiveBoolean = findOrCreateClass(boolean.class);
-        primitiveByte = findOrCreateClass(byte.class);
-        primitiveInt = findOrCreateClass(int.class);
-        primitiveShort = findOrCreateClass(short.class);
-        primitiveChar = findOrCreateClass(char.class);
-        primitiveDouble = findOrCreateClass(double.class);
-        primitiveFloat = findOrCreateClass(float.class);
-        primitives = ImmutableSet.of(
-                primitiveWide,
-                primitiveVoid,
-                primitiveLong,
-                primitiveBoolean,
-                primitiveByte,
-                primitiveInt,
-                primitiveShort,
-                primitiveChar,
-                primitiveDouble,
-                primitiveFloat);
     }
 }

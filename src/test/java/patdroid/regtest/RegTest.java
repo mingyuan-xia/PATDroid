@@ -11,6 +11,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import patdroid.core.ClassInfo;
 import patdroid.core.MethodInfo;
+import patdroid.core.Scope;
 import patdroid.dalvik.Instruction;
 import patdroid.smali.SmaliClassDetailLoader;
 
@@ -33,6 +34,7 @@ public class RegTest {
     private static final int API_LEVEL = 19;
     private static final Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
+    private final Scope scope = new Scope();
     private final File apkFile;
     private final File dumpFile;
     private final boolean updateDump;
@@ -61,7 +63,6 @@ public class RegTest {
         if (updateDump) {
             this.dumpWriter.close();
         }
-        ClassInfo.globalScope.reset();
     }
 
     @Test
@@ -72,10 +73,10 @@ public class RegTest {
             logger.info("Running regression test for " + apkFile);
         }
 
-        SmaliClassDetailLoader.getFrameworkClassLoader(ClassInfo.globalScope, API_LEVEL).loadAll();
-        new SmaliClassDetailLoader(ClassInfo.globalScope, new ZipFile(apkFile), true).loadAll();
+        SmaliClassDetailLoader.getFrameworkClassLoader(scope, API_LEVEL).loadAll();
+        new SmaliClassDetailLoader(scope, new ZipFile(apkFile), true).loadAll();
 
-        List<ClassInfo> sortedClasses = Ordering.usingToString().sortedCopy(ClassInfo.globalScope.getAllClasses());
+        List<ClassInfo> sortedClasses = Ordering.usingToString().sortedCopy(scope.getAllClasses());
         for (ClassInfo c : sortedClasses) {
             if (c.isFrameworkClass()) {
                 continue;

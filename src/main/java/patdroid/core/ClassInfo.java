@@ -36,7 +36,6 @@ import patdroid.util.Log;
  * ClassInfos are obtained by find-series functions not created by constructors.
  */
 public final class ClassInfo {
-	public static final Scope globalScope = new Scope();
 	public static ClassDetailLoader rootDetailLoader = new ClassDetailLoader();
 
 	public final Scope scope;
@@ -158,7 +157,7 @@ public final class ClassInfo {
 	 * @return the method representation, or null if not found or the class is missing
 	 */
 	public MethodInfo findMethodHere(String name, Class<?>... paramTypes) {
-		return findMethodHere(name, globalScope.findOrCreateClass(paramTypes));
+		return findMethodHere(name, scope.findOrCreateClass(paramTypes));
 	}
 	
 	/**
@@ -217,7 +216,7 @@ public final class ClassInfo {
 	 * @return the method representation, or null if not found or the class is missing
 	 */
 	public MethodInfo findMethod(String name, Class<?>... paramTypes) {
-		return findMethod(name, globalScope.findOrCreateClass(paramTypes));
+		return findMethod(name, scope.findOrCreateClass(paramTypes));
 	}
 	
 	/**
@@ -230,7 +229,7 @@ public final class ClassInfo {
 	 */
 	public boolean isConvertibleTo(ClassInfo type) {
 		if (type.isPrimitive()) {
-			return (type == globalScope.primitiveVoid || isPrimitive());
+			return (type == scope.primitiveVoid || isPrimitive());
 		} else {
 			return getDetails().isConvertibleTo(type);
 		}
@@ -324,7 +323,7 @@ public final class ClassInfo {
 	 * @return true if the class is a primitive type
 	 */
 	public boolean isPrimitive() {
-		return globalScope.primitives.contains(this);
+		return scope.primitives.contains(this);
 	}
 
 	/**
