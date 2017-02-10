@@ -36,7 +36,7 @@ import patdroid.util.Log;
  * ClassInfos are obtained by find-series functions not created by constructors.
  */
 public final class ClassInfo {
-	public static final JavaScope globalScope = new JavaScope();
+	public static final Scope globalScope = new Scope();
 	public static ClassDetailLoader rootDetailLoader = new ClassDetailLoader();
 
 	public final Scope scope;
@@ -54,53 +54,6 @@ public final class ClassInfo {
 	ClassInfo(Scope scope, String fullName) {
 		this.scope = scope;
 		this.fullName = fullName;
-	}
-
-	public static Collection<ClassInfo> getAllClasses() {
-		return globalScope.getAllClasses();
-	}
-
-	/**
-	  * Find a class with given name
-	  * @param fullName the full name of the class
-	  * @return the class or null if not found
-	  */
-	public static ClassInfo findClass(String fullName) {
-		return globalScope.findClass(fullName);
-	}
-
-	/**
-	 * Find a class representation with give name. If not found, create one.
-	 * @param fullName the full name of the class
-	 * @return the class found or just created
-	 */
-	public static ClassInfo findOrCreateClass(String fullName) {
-		ClassInfo u = globalScope.findClass(fullName);
-		if (u == null) {
-			// create a new class
-			u = globalScope.createClass(fullName);
-			// if it is an array, settle its base too
-			if (u.isArray()) {
-				findOrCreateClass(fullName.substring(1));
-			}
-		}
-		return u;
-	}
-
-	public static ClassInfo[] findOrCreateClass(String[] fullNames) {
-		final ClassInfo[] a = new ClassInfo[fullNames.length];
-		for (int i = 0; i < fullNames.length; ++i) {
-			a[i] = findOrCreateClass(fullNames[i]);
-		}
-		return a;
-	}
-
-	/**
-	 * Dump the class hierarchy
-	 * @return a String containing all the classes in the global scope
-	 */
-	public static String dumpClassHierarchy() {
-		return globalScope.getAllClassNames().toString();
 	}
 
 	/**
@@ -308,17 +261,17 @@ public final class ClassInfo {
 		Log.doAssert(isArray(), "Try getting the element class of a non-array class " + this);
 		final char first = fullName.charAt(1);
 		switch (first) {
-		case 'C': return globalScope.primitiveChar;
-		case 'I': return globalScope.primitiveInt;
-		case 'B': return globalScope.primitiveByte;
-		case 'Z': return globalScope.primitiveBoolean;
-		case 'F': return globalScope.primitiveFloat;
-		case 'D': return globalScope.primitiveDouble;
-		case 'S': return globalScope.primitiveShort;
-		case 'J': return globalScope.primitiveLong;
-		case 'V': return globalScope.primitiveVoid;
-		case 'L': return ClassInfo.findOrCreateClass(fullName.substring(2, fullName.length() - 1));
-		case '[': return ClassInfo.findOrCreateClass(fullName.substring(1));
+		case 'C': return scope.primitiveChar;
+		case 'I': return scope.primitiveInt;
+		case 'B': return scope.primitiveByte;
+		case 'Z': return scope.primitiveBoolean;
+		case 'F': return scope.primitiveFloat;
+		case 'D': return scope.primitiveDouble;
+		case 'S': return scope.primitiveShort;
+		case 'J': return scope.primitiveLong;
+		case 'V': return scope.primitiveVoid;
+		case 'L': return scope.findOrCreateClass(fullName.substring(2, fullName.length() - 1));
+		case '[': return scope.findOrCreateClass(fullName.substring(1));
 		default:
 			Log.err("unknown element type for:" + fullName);
 			return null;
@@ -364,7 +317,7 @@ public final class ClassInfo {
 	 */
 	public ClassInfo getOuterClass() {
 		Log.doAssert(isInnerClass(), "Try getting the outer class from a non-inner class" + this);
-		return ClassInfo.findOrCreateClass(fullName.substring(0, fullName.lastIndexOf('$')));
+		return scope.findOrCreateClass(fullName.substring(0, fullName.lastIndexOf('$')));
 	}
 
 	/**

@@ -72,10 +72,10 @@ public class RegTest {
             logger.info("Running regression test for " + apkFile);
         }
 
-        SmaliClassDetailLoader.getFrameworkClassLoader(API_LEVEL).loadAll();
-        new SmaliClassDetailLoader(new ZipFile(apkFile), true).loadAll();
+        SmaliClassDetailLoader.getFrameworkClassLoader(ClassInfo.globalScope, API_LEVEL).loadAll();
+        new SmaliClassDetailLoader(ClassInfo.globalScope, new ZipFile(apkFile), true).loadAll();
 
-        List<ClassInfo> sortedClasses = Ordering.usingToString().sortedCopy(ClassInfo.getAllClasses());
+        List<ClassInfo> sortedClasses = Ordering.usingToString().sortedCopy(ClassInfo.globalScope.getAllClasses());
         for (ClassInfo c : sortedClasses) {
             if (c.isFrameworkClass()) {
                 continue;

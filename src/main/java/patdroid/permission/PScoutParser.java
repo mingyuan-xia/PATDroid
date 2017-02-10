@@ -21,6 +21,7 @@ package patdroid.permission;
 
 import patdroid.core.ClassInfo;
 import patdroid.core.MethodInfo;
+import patdroid.core.Scope;
 
 import java.io.*;
 
@@ -29,7 +30,13 @@ import java.io.*;
  * See http://pscout.csl.toronto.edu/ for more details
  */
 public class PScoutParser {
-   public static APIMapping parse(File f) throws IOException {
+    private final Scope scope;
+
+    private PScoutParser(Scope scope) {
+        this.scope = scope;
+    }
+
+   public APIMapping parse(File f) throws IOException {
       final APIMapping r = new APIMapping();
       final BufferedReader br = new BufferedReader(new FileReader(f));
       String perm = "", line = br.readLine();
@@ -49,7 +56,7 @@ public class PScoutParser {
       return r;
    }
 
-   private static MethodInfo parseMethod(String line) {
+   private MethodInfo parseMethod(String line) {
       // example: <android.net.wifi.WifiManager: boolean reassociate()>
       String className, returnType, methodName;
       String[] paramTypes;
@@ -67,7 +74,7 @@ public class PScoutParser {
               findOrCreateClass(returnType),
               findOrCreateClass(paramTypes),
               0);
-      ClassInfo ci = ClassInfo.findOrCreateClass(className);
+      ClassInfo ci = scope.findOrCreateClass(className);
       return (ci == null ? null : ci.findMethod(mproto));
    }
 
@@ -76,9 +83,9 @@ public class PScoutParser {
     * @param t
     * @return
     */
-   private static ClassInfo findOrCreateClass(String t) {
+   private ClassInfo findOrCreateClass(String t) {
       if (!t.endsWith("[]")) {
-         return ClassInfo.findOrCreateClass(t);
+         return scope.findOrCreateClass(t);
       } else {
          String baseType = t.substring(0, t.indexOf("[]"));
          int level = (t.length() - t.indexOf("[]")) / 2;
@@ -92,16 +99,15 @@ public class PScoutParser {
             s += "B";
          else
             s += "L" + baseType + ";";
-         return ClassInfo.findOrCreateClass(s);
+         return scope.findOrCreateClass(s);
       }
    }
 
-   public static ClassInfo[] findOrCreateClass(String[] fullNames) {
+   public ClassInfo[] findOrCreateClass(String[] fullNames) {
       final ClassInfo[] a = new ClassInfo[fullNames.length];
       for (int i = 0; i < fullNames.length; ++i) {
          a[i] = findOrCreateClass(fullNames[i]);
       }
       return a;
    }
-
 }

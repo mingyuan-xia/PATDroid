@@ -22,13 +22,10 @@ import org.jf.dexlib2.iface.MethodImplementation;
 import org.jf.dexlib2.iface.reference.MethodReference;
 
 import patdroid.Settings;
-import patdroid.core.ClassInfo;
-import patdroid.core.ClassDetail;
-import patdroid.core.MethodInfo;
+import patdroid.core.*;
 import patdroid.dalvik.InvocationResolver;
 import patdroid.util.Log;
 
-import patdroid.core.ClassDetailLoader;
 import patdroid.dalvik.Dalvik;
 
 /**
@@ -56,19 +53,19 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         throw new ClassNotFoundException("" + ci.fullName + " not found in the dex file");
     }
 
-    public static SmaliClassDetailLoader getFrameworkClassLoader(int apiLevel) {
+    public static SmaliClassDetailLoader getFrameworkClassLoader(Scope scope, int apiLevel) {
         File f = new File(Settings.frameworkClassesFolder, "android-" + apiLevel + ".dex");
         if (!f.exists())
             return null;
         DexFile dex = null;
         try {
-            dex = DexFileFactory.loadDexFile(f, Settings.apiLevel);
+            dex = DexFileFactory.loadDexFile(f, apiLevel);
         } catch (IOException e) {
             Log.err("failed to load framework classes");
             Log.err(e);
             return null;
         }
-        SmaliClassDetailLoader ldr = new SmaliClassDetailLoader(dex, false);
+        SmaliClassDetailLoader ldr = new SmaliClassDetailLoader(scope, dex, false);
         ldr.isFramework = true;
         return ldr;
     }
@@ -79,7 +76,7 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
     public void loadAll() {
         for (DexFile dexFile: dexFiles) {
             for (final ClassDef classDef : dexFile.getClasses()) {
-                ClassInfo ci = Dalvik.findOrCreateClass(classDef.getType());
+                ClassInfo ci = Dalvik.findOrCreateClass(scope, classDef.getType());
                 ClassDetail detail = translateClassDef(ci, classDef);
                 setDetails(ci, detail);
             }
@@ -90,6 +87,7 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
     }
 
     private DexFile[] dexFiles;
+    private final Scope scope;
     private final boolean translateInstructions;
     private boolean isFramework = false;
 
@@ -97,8 +95,8 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
      * Create a loader that loads everything (including instructions) from an APK file
      * @param apkFile the APK file
      */
-    public SmaliClassDetailLoader(ZipFile apkFile) {
-        this(apkFile, true);
+    public SmaliClassDetailLoader(Scope scope, ZipFile apkFile) {
+        this(scope, apkFile, true);
     }
 
     /**
@@ -106,7 +104,7 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
      * @param apkFile the APK file
      * @param translateInstructions true if the instructions shall be loaded
      */
-    public SmaliClassDetailLoader(ZipFile apkFile, boolean translateInstructions) {
+    public SmaliClassDetailLoader(Scope scope, ZipFile apkFile, boolean translateInstructions) {
         ArrayList<ZipEntry> dexEntries = new ArrayList<ZipEntry>();
         dexEntries.add(apkFile.getEntry("classes.dex"));
         for (int i = 2; i < 99; ++i) {
@@ -122,6 +120,7 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
             Log.err("Source apk does not have any dex files");
         }
 
+        this.scope = scope;
         this.translateInstructions = translateInstructions;
         this.resolver = translateInstructions ? new InvocationResolver() : null;
         final Opcodes opcodes = Opcodes.forApi(Settings.apiLevel);
@@ -142,7 +141,8 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
      * @param dexFile the DEX file
      * @param translateInstructions  true if the instructions shall be loaded
      */
-    public SmaliClassDetailLoader(DexFile dexFile, boolean translateInstructions) {
+    public SmaliClassDetailLoader(Scope scope, DexFile dexFile, boolean translateInstructions) {
+        this.scope = scope;
         this.dexFiles = new DexFile[] {dexFile};
         this.translateInstructions = translateInstructions;
         this.resolver = translateInstructions ? new InvocationResolver() : null;
@@ -154,9 +154,9 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         if (classDef.getSuperclass() == null) {
             superClass = null; // for java.lang.Object
         } else {
-            superClass = Dalvik.findOrCreateClass(classDef.getSuperclass());
+            superClass = Dalvik.findOrCreateClass(scope, classDef.getSuperclass());
         }
-        final ClassInfo[] interfaces = findOrCreateClass(classDef.getInterfaces());
+        final ClassInfo[] interfaces = findOrCreateClass(scope, classDef.getInterfaces());
         final int accessFlags = translateAccessFlags(classDef.getAccessFlags());
         final MethodInfo[] methods = translateMethods(ci,
                 classDef.getMethods());
@@ -173,8 +173,8 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
     }
 
     private MethodInfo translateMethod(ClassInfo ci, Method method) {
-        final ClassInfo retType = Dalvik.findOrCreateClass(method.getReturnType());
-        final ClassInfo[] paramTypes = findOrCreateClass(method.getParameterTypes());
+        final ClassInfo retType = Dalvik.findOrCreateClass(scope, method.getReturnType());
+        final ClassInfo[] paramTypes = findOrCreateClass(scope, method.getParameterTypes());
         final int accessFlags = translateAccessFlags(method.getAccessFlags());
         final MethodInfo mi = new MethodInfo(ci, method.getName(),
                 retType, paramTypes, accessFlags);
@@ -184,7 +184,7 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
             final MethodImplementation impl = method.getImplementation();
             // Decode instructions
             if (impl != null) {
-                MethodImplementationTranslator mit = new MethodImplementationTranslator(ClassInfo.globalScope, resolver);
+                MethodImplementationTranslator mit = new MethodImplementationTranslator(scope, resolver);
                 mit.translate(mi, impl);
             }
         }
@@ -201,12 +201,12 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         return result.toArray(new MethodInfo[result.size()]);
     }
 
-    private static HashMap<String, ClassInfo> translateFields(
+    private HashMap<String, ClassInfo> translateFields(
             Iterable<? extends Field> fields) {
         HashMap<String, ClassInfo> result = new HashMap<String, ClassInfo>();
         for (Field field: fields) {
             // TODO access flags and initial value are ignored
-            result.put(field.getName(), Dalvik.findOrCreateClass(field.getType()));
+            result.put(field.getName(), Dalvik.findOrCreateClass(scope, field.getType()));
         }
         return result;
     }
@@ -235,19 +235,19 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         return f;
     }
 
-    static MethodInfo translateMethodReference(MethodReference method, int accessFlags) {
-        ClassInfo ci = Dalvik.findOrCreateClass(method.getDefiningClass());
-        ClassInfo retType = Dalvik.findOrCreateClass(method.getReturnType());
-        ClassInfo[] paramTypes = findOrCreateClass(method.getParameterTypes());
+    static MethodInfo translateMethodReference(Scope scope, MethodReference method, int accessFlags) {
+        ClassInfo ci = Dalvik.findOrCreateClass(scope, method.getDefiningClass());
+        ClassInfo retType = Dalvik.findOrCreateClass(scope, method.getReturnType());
+        ClassInfo[] paramTypes = findOrCreateClass(scope, method.getParameterTypes());
         return new MethodInfo(ci, method.getName(),
                 retType, paramTypes, accessFlags);
     }
 
-    public static ClassInfo[] findOrCreateClass(Collection<? extends CharSequence> l) {
+    public static ClassInfo[] findOrCreateClass(Scope scope, Collection<? extends CharSequence> l) {
         ClassInfo[] ret = new ClassInfo[l.size()];
         int i = 0;
         for (CharSequence s : l) {
-            ret[i] = Dalvik.findOrCreateClass(s.toString());
+            ret[i] = Dalvik.findOrCreateClass(scope, s.toString());
             ++i;
         }
         return ret;

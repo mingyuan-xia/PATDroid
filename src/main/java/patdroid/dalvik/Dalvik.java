@@ -1,6 +1,7 @@
 package patdroid.dalvik;
 
 import patdroid.core.ClassInfo;
+import patdroid.core.Scope;
 import patdroid.util.Log;
 
 /**
@@ -100,8 +101,8 @@ public class Dalvik {
      * @param dalvikClassName The class name in Dalvik flavor
      * @return The ClassInfo
      */
-    public static ClassInfo findOrCreateClass(String dalvikClassName) {
-        return ClassInfo.findOrCreateClass(toCanonicalName(dalvikClassName));
+    public static ClassInfo findOrCreateClass(Scope scope, String dalvikClassName) {
+        return scope.findOrCreateClass(toCanonicalName(dalvikClassName));
     }
 
     /**
@@ -110,8 +111,8 @@ public class Dalvik {
      * @param dalvikClassName The class name in Dalvik flavor
      * @return The ClassInfo
      */
-    public static ClassInfo findClass(String dalvikClassName) {
-        return ClassInfo.findClass(toCanonicalName(dalvikClassName));
+    public static ClassInfo findClass(Scope scope, String dalvikClassName) {
+        return scope.findClass(toCanonicalName(dalvikClassName));
     }
 
     /**
@@ -120,10 +121,10 @@ public class Dalvik {
      * @param dalvikNames The class names in Dalvik flavor
      * @return The ClassInfo
      */
-    public static ClassInfo[] findOrCreateClass(String[] dalvikNames) {
+    public static ClassInfo[] findOrCreateClass(Scope scope, String[] dalvikNames) {
         ClassInfo[] ci = new ClassInfo[dalvikNames.length];
         for (int i = 0; i < dalvikNames.length; ++i) {
-            ci[i] = findOrCreateClass(dalvikNames[i]);
+            ci[i] = findOrCreateClass(scope, dalvikNames[i]);
         }
         return ci;
     }
@@ -134,12 +135,11 @@ public class Dalvik {
      * @param dalvikNames The class names in Dalvik flavor
      * @return The ClassInfo
      */
-    public static ClassInfo[] findClass(String[] dalvikNames) {
+    public static ClassInfo[] findClass(Scope scope, String[] dalvikNames) {
         ClassInfo[] ci = new ClassInfo[dalvikNames.length];
         for (int i = 0; i < dalvikNames.length; ++i) {
-            ci[i] = findClass(dalvikNames[i]);
+            ci[i] = findClass(scope, dalvikNames[i]);
         }
         return ci;
     }
-
 }

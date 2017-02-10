@@ -54,24 +54,24 @@ public final class PrimitiveInfo {
 		this.high32 = (int)(l >> 32);
 	}
 	
-	public static PrimitiveInfo fromInt(JavaScope javaScope, int value) {
-		return new PrimitiveInfo(javaScope.primitiveInt, value, 0);
+	public static PrimitiveInfo fromInt(Scope scope, int value) {
+		return new PrimitiveInfo(scope.primitiveInt, value, 0);
 	}
 
-	public static PrimitiveInfo fromLong(JavaScope javaScope, long value) {
-        return new PrimitiveInfo(javaScope.primitiveLong, value);
+	public static PrimitiveInfo fromLong(Scope scope, long value) {
+        return new PrimitiveInfo(scope.primitiveLong, value);
 	}
 
-	public static PrimitiveInfo fromDouble(JavaScope javaScope, double value) {
-        return new PrimitiveInfo(javaScope.primitiveDouble, Double.doubleToLongBits(value));
+	public static PrimitiveInfo fromDouble(Scope scope, double value) {
+        return new PrimitiveInfo(scope.primitiveDouble, Double.doubleToLongBits(value));
 	}
 
-	public static PrimitiveInfo fromFloat(JavaScope javaScope, float value) {
-        return new PrimitiveInfo(javaScope.primitiveFloat, Float.floatToIntBits(value), 0);
+	public static PrimitiveInfo fromFloat(Scope scope, float value) {
+        return new PrimitiveInfo(scope.primitiveFloat, Float.floatToIntBits(value), 0);
 	}
 
-	public static PrimitiveInfo fromBoolean(JavaScope javaScope, boolean value) {
-        return new PrimitiveInfo(javaScope.primitiveBoolean, value ? 1 : 0, 0);
+	public static PrimitiveInfo fromBoolean(Scope scope, boolean value) {
+        return new PrimitiveInfo(scope.primitiveBoolean, value ? 1 : 0, 0);
 	}
 
 	/**
@@ -80,21 +80,21 @@ public final class PrimitiveInfo {
 	 * @param o an arbitrary object of primitive boxing type
 	 * @return a PrimitiveInfo
 	 */
-	public static PrimitiveInfo fromObject(JavaScope javaScope, Object o) {
+	public static PrimitiveInfo fromObject(Scope scope, Object o) {
 		if (o instanceof Integer) {
-			return fromInt(javaScope, ((Integer) o).intValue());
+			return fromInt(scope, ((Integer) o).intValue());
 		} else if (o instanceof Short) {
-			return fromInt(javaScope, ((Short) o).intValue());
+			return fromInt(scope, ((Short) o).intValue());
 		} else if (o instanceof Byte) {
-			return fromInt(javaScope, ((Byte) o).intValue());
+			return fromInt(scope, ((Byte) o).intValue());
 		} else if (o instanceof Long) {
-			return fromLong(javaScope, ((Long) o).longValue());
+			return fromLong(scope, ((Long) o).longValue());
 		} else if (o instanceof Float) {
-			return fromFloat(javaScope, ((Float) o).floatValue());
+			return fromFloat(scope, ((Float) o).floatValue());
 		} else if (o instanceof Double) {
-			return fromDouble(javaScope, ((Double) o).doubleValue());
+			return fromDouble(scope, ((Double) o).doubleValue());
 		} else if (o instanceof Boolean) {
-			return fromBoolean(javaScope, ((Boolean) o).booleanValue());
+			return fromBoolean(scope, ((Boolean) o).booleanValue());
 		} else {
 			Log.err("unsupported object to ValueInfo" + o.getClass().toString());
 			return null;
@@ -134,25 +134,25 @@ public final class PrimitiveInfo {
 		return low32 == 1;
 	}
 
-	private final JavaScope javaScope() {
-	    return (JavaScope) this.kind.scope;
+	private final Scope scope() {
+	    return (Scope) this.kind.scope;
     }
 
     public PrimitiveInfo unsafeCastTo(ClassInfo targetType) {
         Log.doAssert(targetType.isPrimitive(), "must cast to a primitive type");
-        if (targetType == javaScope().primitiveChar ||
-                targetType == javaScope().primitiveShort ||
-                targetType == javaScope().primitiveByte) {
-            targetType = javaScope().primitiveInt;
+        if (targetType == scope().primitiveChar ||
+                targetType == scope().primitiveShort ||
+                targetType == scope().primitiveByte) {
+            targetType = scope().primitiveInt;
         }
         return new PrimitiveInfo(targetType, low32, high32);
     }
 
     public final PrimitiveInfo castTo(ClassInfo targetType) {
 		Log.doAssert(targetType.isPrimitive(), "must cast to a primitive type");
-        Log.doAssert(targetType.scope == javaScope(), "must be in the same scope");
+        Log.doAssert(targetType.scope == scope(), "must be in the same scope");
 		PrimitiveInfo v = null;
-		if (targetType == javaScope().primitiveInt) {
+		if (targetType == scope().primitiveInt) {
 			int val = 0;
 			if (isLong()) {
 				val = (int) longValue();
@@ -165,8 +165,8 @@ public final class PrimitiveInfo {
 			} else if (isDouble()) {
 				val = (int) doubleValue();
 			}
-			v = fromInt(javaScope(), val);
-		} else if (targetType == javaScope().primitiveLong) {
+			v = fromInt(scope(), val);
+		} else if (targetType == scope().primitiveLong) {
 			long val = 0l;
 			if (isLong()) {
 				val = (long) longValue();
@@ -179,8 +179,8 @@ public final class PrimitiveInfo {
 			} else if (isDouble()) {
 				val = (long) doubleValue();
 			}
-			v = fromLong(javaScope(), val);
-		} else if (targetType == javaScope().primitiveFloat) {
+			v = fromLong(scope(), val);
+		} else if (targetType == scope().primitiveFloat) {
 			float val = 0f;
 			if (isLong()) {
 				val = (float) longValue();
@@ -193,8 +193,8 @@ public final class PrimitiveInfo {
 			} else if (isDouble()) {
 				val = (float) doubleValue();
 			}
-			v = fromFloat(javaScope(), val);
-		} else if (targetType == javaScope().primitiveDouble) {
+			v = fromFloat(scope(), val);
+		} else if (targetType == scope().primitiveDouble) {
 			double val = 0.0;
 			if (isLong()) {
 				val = (double) longValue();
@@ -207,39 +207,39 @@ public final class PrimitiveInfo {
 			} else if (isDouble()) {
 				val = (double) doubleValue();
 			}
-			v = fromDouble(javaScope(), val);
+			v = fromDouble(scope(), val);
 		} else { // short, boolean, char, byte
-			v = new PrimitiveInfo(javaScope().primitiveInt, this.low32);
+			v = new PrimitiveInfo(scope().primitiveInt, this.low32);
 		}
 		return v;
 	}
 
-	public static PrimitiveInfo twoIntsToDouble(JavaScope javaScope, int vlow, int vhigh) {
-		return new PrimitiveInfo(javaScope.primitiveDouble, vlow, vhigh);
+	public static PrimitiveInfo twoIntsToDouble(Scope scope, int vlow, int vhigh) {
+		return new PrimitiveInfo(scope.primitiveDouble, vlow, vhigh);
 	}
 
-	public static PrimitiveInfo twoIntsToLong(JavaScope javaScope, int vlow, int vhigh) {
-		return new PrimitiveInfo(javaScope.primitiveLong, vlow, vhigh);
+	public static PrimitiveInfo twoIntsToLong(Scope scope, int vlow, int vhigh) {
+		return new PrimitiveInfo(scope.primitiveLong, vlow, vhigh);
 	}
 
 	public final boolean isInteger() {
-		return kind == javaScope().primitiveInt;
+		return kind == scope().primitiveInt;
 	}
 
 	public final boolean isLong() {
-		return kind == javaScope().primitiveLong;
+		return kind == scope().primitiveLong;
 	}
 	
 	public final boolean isDouble() {
-		return kind == javaScope().primitiveDouble;
+		return kind == scope().primitiveDouble;
 	}
 
 	public final boolean isFloat() {
-		return kind == javaScope().primitiveFloat;
+		return kind == scope().primitiveFloat;
 	}
 
 	public final boolean isBoolean() {
-		return kind == javaScope().primitiveBoolean;
+		return kind == scope().primitiveBoolean;
 	}
 
 	public final boolean isZero() {
