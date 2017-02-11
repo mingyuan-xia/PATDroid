@@ -49,7 +49,7 @@ public final class ClassInfo {
 	 * The Java canonical class name
 	 */
 	public final String fullName;
-	boolean isMissing;
+
 	ClassDetail details;
 
 	/**
@@ -77,7 +77,7 @@ public final class ClassInfo {
 	 * @return if this class is missing
 	 */
 	public boolean isMissing() {
-		return isMissing;
+		return getDetails() == missingDetail;
 	}
 	
 	/**
@@ -88,7 +88,7 @@ public final class ClassInfo {
 	 * @return the type, or null if not found or the class is missing
 	 */
 	public ClassInfo getFieldType(String fieldName) {
-		return (isMissing ? null : getDetails().getFieldType(fieldName));
+		return getDetails().getFieldType(fieldName);
 	}
 	
 	/**
@@ -99,7 +99,7 @@ public final class ClassInfo {
 	 * @return the type of the static field, or null if not found or the class is missing
 	 */
 	public ClassInfo getStaticFieldType(String fieldName) {
-		return (isMissing ? null : getDetails().getStaticFieldType(fieldName));
+		return getDetails().getStaticFieldType(fieldName);
 	}
 
 	/**
@@ -109,7 +109,7 @@ public final class ClassInfo {
 	 * @return a key-value store mapping field name to their types 
 	 */
 	public ImmutableMap<String, ClassInfo> getAllFieldsHere() {
-		return (isMissing ? null : getDetails().fields);
+		return getDetails().fields;
 	}
 	
 	/**
@@ -119,7 +119,7 @@ public final class ClassInfo {
 	 * @return a key-value store mapping static field name to their types 
 	 */
 	public ImmutableMap<String, ClassInfo> getAllStaticFieldsHere() {
-		return (isMissing ? null : getDetails().staticFields);
+		return getDetails().staticFields;
 	}
 
 	/**
@@ -127,7 +127,6 @@ public final class ClassInfo {
 	 * @return all methods in the class
      */
 	public ImmutableCollection<MethodInfo> getAllMethods() {
-		if (isMissing) return null;
 		return getDetails().methods.values();
 	}
 
@@ -139,7 +138,7 @@ public final class ClassInfo {
 	 * @return the method in this class, or null if not found or the class is missing
 	 */
 	public MethodInfo findMethodHere(MethodSignature signature) {
-		return (isMissing ? null : getDetails().methods.get(signature));
+		return getDetails().methods.get(signature);
 	}
 	
 	/**
@@ -151,7 +150,7 @@ public final class ClassInfo {
 	 * An empty array will be returned in case of not finding any method
 	 */
 	public MethodInfo[] findMethodsHere(String name) {
-		return (isMissing ? null : getDetails().findMethodsHere(name));
+		return getDetails().findMethodsHere(name);
 	}
 	
 	/**
@@ -163,7 +162,7 @@ public final class ClassInfo {
 	 * An empty array will be returned in case of not finding any method
 	 */
 	public MethodInfo[] findMethods(String name) {
-		return (isMissing ? null : getDetails().findMethods(name));
+		return getDetails().findMethods(name);
 	}
 
 	/**
@@ -174,7 +173,7 @@ public final class ClassInfo {
 	 * @return  the method representation, or null if not found or the class is missing
 	 */
 	public MethodInfo findMethod(MethodSignature signature) {
-		return (isMissing ? null : getDetails().findMethod(signature));
+		return getDetails().findMethod(signature);
 	}
 
 	/**
@@ -283,18 +282,18 @@ public final class ClassInfo {
 	 * @return if the class is final
 	 */
 	public boolean isFinal() {
-		return !isMissing && Modifier.isFinal(getDetails().accessFlags);
+		return Modifier.isFinal(getDetails().accessFlags);
 	}
 
 	/**
 	 * @return if the class is an interface
 	 */
 	public boolean isInterface() {
-		return !isMissing && Modifier.isInterface(getDetails().accessFlags);
+		return Modifier.isInterface(getDetails().accessFlags);
 	}
 
 	public boolean isAbstract() {
-		return !isMissing && Modifier.isAbstract(getDetails().accessFlags);
+		return Modifier.isAbstract(getDetails().accessFlags);
 	}
 	
 	/**
@@ -339,9 +338,7 @@ public final class ClassInfo {
 	 * @return the class detailed info
 	 */
 	public ClassDetail getDetails() {
-		if (details != null) {
-			return details;
-		} else {
+		if (details == null) {
 			try {
 				rootDetailLoader.load(this);
 				return details;
@@ -352,11 +349,10 @@ public final class ClassInfo {
 			} catch (NoClassDefFoundError e) {
 				Log.warn("Cannot find framework class def: " + fullName);
 			}
-			this.isMissing = true;
-			return missingDetail;
+			this.details = missingDetail;
 		}
+		return details;
 	}
-
 
 	/**
 	 * An almost final class has no derived classes in the current class tree
