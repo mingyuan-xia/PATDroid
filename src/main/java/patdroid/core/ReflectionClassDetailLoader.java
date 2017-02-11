@@ -1,5 +1,7 @@
 package patdroid.core;
 
+import com.google.common.collect.ImmutableList;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -54,8 +56,8 @@ public class ReflectionClassDetailLoader extends ClassDetailLoader {
             }
         }
         if (hasStaticFields) {
-            methods.add(new MethodInfo(ci, MethodInfo.STATIC_INITIALIZER,
-                    scope.primitiveVoid, new ClassInfo[0], Modifier.STATIC));
+            methods.add(new MethodInfo(ci, MethodSignature.of(MethodInfo.STATIC_INITIALIZER),
+                    scope.primitiveVoid, Modifier.STATIC));
         }
         // TODO: do we actually need this?? I think the synthetic fields are included in declared fields
         // see http://www.public.iastate.edu/~java/docs/guide/innerclasses/html/innerclasses.doc.html
@@ -67,28 +69,20 @@ public class ReflectionClassDetailLoader extends ClassDetailLoader {
 
         // transform the class methods
         for (Method m : c.getDeclaredMethods()) {
-            String name = m.getName();
+            MethodSignature signature = MethodSignature.of(scope, m.getName(), m.getParameterTypes());
             ClassInfo returnType = scope.findOrCreateClass(m.getReturnType());
-            ClassInfo[] paramTypes = scope.findOrCreateClass(m.getParameterTypes());
-            methods.add(new MethodInfo(ci, name, returnType, paramTypes,
-                    m.getModifiers()));
+            methods.add(new MethodInfo(ci, signature, returnType, m.getModifiers()));
         }
 
         // transform the class constructors
         for (Constructor<?> m : c.getDeclaredConstructors()) {
-            String name = MethodInfo.CONSTRUCTOR;
+            MethodSignature signature = MethodSignature.of(scope, MethodInfo.CONSTRUCTOR, m.getParameterTypes());
             ClassInfo returnType = scope.primitiveVoid;
-            ClassInfo[] paramTypes = scope.findOrCreateClass(m.getParameterTypes());
-            methods.add(new MethodInfo(ci, name, returnType,
-                    paramTypes, m.getModifiers()));
+            methods.add(new MethodInfo(ci, signature, returnType, m.getModifiers()));
         }
 
         // transform interfaces
-        Class<?>[] raw_interfaces = c.getInterfaces();
-        ClassInfo[] interfaces = new ClassInfo[raw_interfaces.length];
-        for (int i = 0; i < raw_interfaces.length; ++i) {
-            interfaces[i] = scope.findOrCreateClass(raw_interfaces[i]);
-        }
+        ImmutableList<ClassInfo> interfaces = scope.findOrCreateClasses(c.getInterfaces());
 
         // loaded as a framework class
         setDetails(ci, createDetail(superClass, interfaces,

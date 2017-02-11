@@ -22,6 +22,7 @@ package patdroid.core;
 
 import java.util.*;
 
+import com.google.common.collect.ImmutableList;
 import patdroid.util.Log;
 
 /**
@@ -30,30 +31,12 @@ import patdroid.util.Log;
  * The details of a class are only supposed to be filled by class loader.
  */
 public final class ClassDetail {
-	/**
-	 * This wrapper relies on the signature hash of MethodInfo
-	 */
-	private final class MethodInfoWrapper {
-		private final MethodInfo m;
-		private final int signatureHash;
-		public MethodInfoWrapper(MethodInfo m) {
-			this.m = m;
-			this.signatureHash = m.computeSignatureHash();
-		}
-		@Override
-		public int hashCode() { return signatureHash; }
-		@Override
-		public boolean equals(Object o) { return this.signatureHash == (((MethodInfoWrapper)o).signatureHash); }
-		@Override
-		public String toString() { return m.toString(); }
-	}
-	
 	final static ClassDetail missingDetail
-		= new ClassDetail(null, new ClassInfo[0], 0, new MethodInfo[0],
+		= new ClassDetail(null, ImmutableList.<ClassInfo>of(), 0, new MethodInfo[0],
 			new HashMap<String, ClassInfo>(), new HashMap<String, ClassInfo>(), true);
 	private final ClassInfo superClass;
-	private final ClassInfo[] interfaces;
-	private final HashMap<MethodInfoWrapper, MethodInfo> methods;
+    public final ImmutableList<ClassInfo> interfaces;
+	public final HashMap<MethodSignature, MethodInfo> methods;
 	private final HashMap<String, ClassInfo> fields;
 	private final HashMap<String, ClassInfo> staticFields;
 	private final boolean isFrameworkClass;
@@ -75,16 +58,16 @@ public final class ClassDetail {
 	 * @param staticFields static fields, stored in a name-type map 
 	 * @param isFrameworkClass whether it is a framework class
 	 */
-	ClassDetail(ClassInfo superClass, ClassInfo[] interfaces,
+	ClassDetail(ClassInfo superClass, List<ClassInfo> interfaces,
 					   int accessFlags, MethodInfo[] methods,
 					   HashMap<String, ClassInfo> fields,
 					   HashMap<String, ClassInfo> staticFields, boolean isFrameworkClass) {
 		this.accessFlags = accessFlags;
 		this.superClass = superClass;
-		this.interfaces = interfaces;
-		this.methods = new HashMap<MethodInfoWrapper, MethodInfo>();
+		this.interfaces = ImmutableList.copyOf(interfaces);
+		this.methods = new HashMap<MethodSignature, MethodInfo>();
 		for (MethodInfo mi : methods) {
-			this.methods.put(new MethodInfoWrapper(mi), mi);
+			this.methods.put(mi.signature, mi);
 		}
 		this.fields = fields;
 		this.staticFields = new HashMap<String, ClassInfo>(staticFields);
@@ -94,14 +77,14 @@ public final class ClassDetail {
 	/**
 	 * Only for {@link #changeSuperClass(ClassInfo)}, should not be called by any other class.
 	 */
-	private ClassDetail(ClassInfo superClass, ClassInfo[] interfaces,
-				int accessFlags, HashMap<MethodInfoWrapper, MethodInfo> methods,
+	private ClassDetail(ClassInfo superClass, List<ClassInfo> interfaces,
+				int accessFlags, HashMap<MethodSignature, MethodInfo> methods,
 				HashMap<String, ClassInfo> fields,
 				HashMap<String, ClassInfo> staticFields, boolean isFrameworkClass) {
 		this.accessFlags = accessFlags;
 		this.superClass = superClass;
-		this.interfaces = interfaces;
-		this.methods = new HashMap<MethodInfoWrapper, MethodInfo>(methods);
+		this.interfaces = ImmutableList.copyOf(interfaces);
+		this.methods = new HashMap<MethodSignature, MethodInfo>(methods);
 		this.fields = fields;
 		this.staticFields = new HashMap<String, ClassInfo>(staticFields);
 		this.isFrameworkClass = isFrameworkClass;
@@ -168,26 +151,17 @@ public final class ClassDetail {
 	}
 	
 	/**
-	 * Find a method declared in this class
-	 * @param mproto the method prototype
-	 * @return the method in the class, or null if not found
-	 */
-	public MethodInfo findMethodHere(MethodInfo mproto) {
-		return methods.get(new MethodInfoWrapper(mproto));
-	}
-	
-	/**
 	 * Find a concrete method given a method prototype
 	 * 
-	 * @param mproto The prototype of a method
+	 * @param signature The signature of a method
 	 * @return The method matching the prototype in the class
 	 */
-	public MethodInfo findMethod(MethodInfo mproto) {
+	public MethodInfo findMethod(MethodSignature signature) {
 		Deque<ClassDetail> q = new ArrayDeque<ClassDetail>();
 		q.push(this);
 		while (!q.isEmpty()) {
 			ClassDetail detail = q.pop();
-			MethodInfo mi = detail.findMethodHere(mproto);
+			MethodInfo mi = detail.methods.get(signature);
 			if (mi != null) {
 				return mi;
 			}
@@ -242,7 +216,7 @@ public final class ClassDetail {
 	public MethodInfo[] findMethodsHere(String name) {
 		ArrayList<MethodInfo> result = new ArrayList<MethodInfo>();
 		for (MethodInfo m : methods.values()) {
-			if (m.name.equals(name)) {
+			if (m.signature.name.equals(name)) {
 				result.add(m);
 			}
 		}
@@ -277,8 +251,6 @@ public final class ClassDetail {
 	public final ClassInfo getSuperClass() {
 		return superClass;
 	}
-
-	public final ClassInfo[] getInterfaces() { return this.interfaces; }
 
 	public ClassDetail changeSuperClass(ClassInfo superClass) {
 		ClassDetail details = new ClassDetail(superClass, interfaces, accessFlags,

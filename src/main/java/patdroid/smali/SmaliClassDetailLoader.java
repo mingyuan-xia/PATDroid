@@ -7,9 +7,11 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import com.google.common.collect.ImmutableList;
 import org.jf.dexlib2.AccessFlags;
 import org.jf.dexlib2.DexFileFactory;
 import org.jf.dexlib2.Opcodes;
@@ -137,7 +139,7 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         } else {
             superClass = Dalvik.findOrCreateClass(ci.scope, classDef.getSuperclass());
         }
-        final ClassInfo[] interfaces = findOrCreateClass(ci.scope, classDef.getInterfaces());
+        final ImmutableList<ClassInfo> interfaces = findOrCreateClasses(ci.scope, classDef.getInterfaces());
         final int accessFlags = translateAccessFlags(classDef.getAccessFlags());
         final MethodInfo[] methods = translateMethods(ci,
                 classDef.getMethods());
@@ -155,10 +157,10 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
 
     private MethodInfo translateMethod(ClassInfo ci, Method method) {
         final ClassInfo retType = Dalvik.findOrCreateClass(ci.scope, method.getReturnType());
-        final ClassInfo[] paramTypes = findOrCreateClass(ci.scope, method.getParameterTypes());
+        final ImmutableList<ClassInfo> paramTypes = findOrCreateClasses(ci.scope, method.getParameterTypes());
+        final MethodSignature signature = new MethodSignature(method.getName(), paramTypes);
         final int accessFlags = translateAccessFlags(method.getAccessFlags());
-        final MethodInfo mi = new MethodInfo(ci, method.getName(),
-                retType, paramTypes, accessFlags);
+        final MethodInfo mi = new MethodInfo(ci, signature, retType, accessFlags);
         Log.msg("Translating method: %s", mi.toString());
 
         if (translateInstructions) {
@@ -219,18 +221,15 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
     static MethodInfo translateMethodReference(Scope scope, MethodReference method, int accessFlags) {
         ClassInfo ci = Dalvik.findOrCreateClass(scope, method.getDefiningClass());
         ClassInfo retType = Dalvik.findOrCreateClass(scope, method.getReturnType());
-        ClassInfo[] paramTypes = findOrCreateClass(scope, method.getParameterTypes());
-        return new MethodInfo(ci, method.getName(),
-                retType, paramTypes, accessFlags);
+        ImmutableList<ClassInfo> paramTypes = findOrCreateClasses(scope, method.getParameterTypes());
+        return new MethodInfo(ci, new MethodSignature(method.getName(), paramTypes), retType, accessFlags);
     }
 
-    public static ClassInfo[] findOrCreateClass(Scope scope, Collection<? extends CharSequence> l) {
-        ClassInfo[] ret = new ClassInfo[l.size()];
-        int i = 0;
+    private static ImmutableList<ClassInfo> findOrCreateClasses(Scope scope, List<? extends CharSequence> l) {
+        ImmutableList.Builder<ClassInfo> builder = ImmutableList.builder();
         for (CharSequence s : l) {
-            ret[i] = Dalvik.findOrCreateClass(scope, s.toString());
-            ++i;
+            builder.add(Dalvik.findOrCreateClass(scope, s.toString()));
         }
-        return ret;
+        return builder.build();
     }
 }

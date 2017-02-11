@@ -46,7 +46,7 @@ public class InvocationResolver {
             final Instruction i = p.first.insns[insn_idx];
             final Object[] params = (Object[]) i.extra;
             final MethodInfo mproto = (MethodInfo) params[0];
-            params[0] = mproto.myClass.findMethod(mproto);
+            params[0] = mproto.myClass.findMethod(mproto.signature);
             if (params[0] == null) {
                 Log.debug("Cannot resolve method invocation, replace with HALT:" + mproto);
                 i.opcode = Instruction.OP_HALT;

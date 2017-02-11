@@ -45,17 +45,13 @@ public final class MethodInfo {
 	 */
 	public final ClassInfo myClass;
 	/** 
-	 * The name of the method
+	 * The signature of the method
 	 */
-	public final String name;
+	public final MethodSignature signature;
 	/**
 	 * The modifiers, in the format of {@link java.lang.reflect.Modifier}
 	 */
 	public final int modifiers;
-	/**
-	 * The parameter types
-	 */
-	public final ClassInfo[] paramTypes;
 	/**
 	 * The return type
 	 * <p> if the method is a constructor or a static initializer, this will always be void </p>
@@ -78,71 +74,26 @@ public final class MethodInfo {
 	/**
 	 * Create a method info that is part of a class
 	 * @param myClass the class
-	 * @param name the name 
+	 * @param signature the method signature
 	 * @param returnType the return type
-	 * @param paramTypes the parameter types
 	 * @param accessFlags the access flags
 	 */
-	public MethodInfo(ClassInfo myClass, String name, ClassInfo returnType,
-			ClassInfo[] paramTypes, int accessFlags) {
+	public MethodInfo(ClassInfo myClass, MethodSignature signature, ClassInfo returnType, int accessFlags) {
 		this.myClass = myClass;
-		this.name = name;
+		this.signature = signature;
 		this.returnType = returnType;
-		this.paramTypes = paramTypes;
 		this.modifiers = accessFlags;
 	}
 	
 	/**
 	 * Construct a function prototype
-	 * @param name the method name
+	 * @param signature the method signature
 	 * @param returnType the return type
-	 * @param paramTypes the parameter types
-	 * @param accessFlags access flags, zero if none 
+	 * @param accessFlags access flags, zero if none
 	 * @return the method prototype
 	 */
-	public static MethodInfo makePrototype(String name, ClassInfo returnType,
-			ClassInfo[] paramTypes, int accessFlags) {
-		return new MethodInfo(null, name, returnType, paramTypes, accessFlags);
-	}
-
-	/**
-	 *
-	 * @return the method prototype of the method
-	 */
-	public MethodInfo getPrototype() {
-		return MethodInfo.makePrototype(this.name, this.returnType, this.paramTypes, this.modifiers);
-	}
-
-	/**
-	 * Compute the hash of the function signature. So if two functions have same
-	 * signature, their signature hashes should be equal.
-	 * <p> A signature contains the name and parameter types (no access flags and return type) </p>
-	 * @return the signature hash
-	 */
-	public int computeSignatureHash() {
-		final int prime = 31;
-		int result = 1;
-		result = result * prime + name.hashCode();
-		for (ClassInfo t : paramTypes) {
-			result = result * prime + System.identityHashCode(t);
-		}
-		return result;
-	}
-
-	/**
-	 * Test if two functions have the same prototype
-	 * @param m the prototype
-	 * @return true if two functions have the same prototype
-	 */
-	public boolean hasSameSignature(MethodInfo m) {
-		if (!m.name.equals(name) ||
-				m.paramTypes.length != paramTypes.length)
-			return false;
-		for (int i = 0; i < this.paramTypes.length; ++i) {
-			if (this.paramTypes[i] != m.paramTypes[i])
-				return false;
-		}
-		return true;
+	public static MethodInfo makePrototype(MethodSignature signature, ClassInfo returnType, int accessFlags) {
+		return new MethodInfo(null, signature, returnType, accessFlags);
 	}
 
 	/**
@@ -154,15 +105,14 @@ public final class MethodInfo {
 	 */
 	public MethodInfo getOverridingMethod() {
 		if (this.isConstructor() || this.isStatic()) return null;
-		final MethodInfo mproto = this.getPrototype();
 		final ClassInfo superClass = this.myClass.getSuperClass();
 		MethodInfo matching;
 		if (superClass != null) {
-			matching = superClass.findMethod(mproto);
+			matching = superClass.findMethod(signature);
 			if (matching != null) return matching;
 		}
 		for (ClassInfo intf: this.myClass.getInterfaces()) {
-			matching = intf.findMethod(mproto);
+			matching = intf.findMethod(signature);
 			if (matching != null) return matching;
 		}
 		return null;
@@ -171,8 +121,7 @@ public final class MethodInfo {
 	@Override
 	public String toString() {
 		String s = (myClass == null ? "" : myClass.toString());
-		return s + "/" + this.name
-				+ Arrays.deepToString(paramTypes);
+		return s + "/" + signature;
 	}
 
 	/**
@@ -183,7 +132,7 @@ public final class MethodInfo {
 	 */
 	public boolean canOverride(MethodInfo m) {
 		return this == m ||
-			(this.myClass.isConvertibleTo(m.myClass) && hasSameSignature(m));
+			(this.myClass.isConvertibleTo(m.myClass) && this.signature.equals(m.signature));
 	}
 
 	/**
@@ -204,7 +153,7 @@ public final class MethodInfo {
 	 * @return true if the method is a constructor
 	 */
 	public boolean isConstructor() {
-		return name.equals(CONSTRUCTOR);
+		return signature.name.equals(CONSTRUCTOR);
 	}
 
 	/**

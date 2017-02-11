@@ -1,9 +1,11 @@
 package patdroid.core;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * A scope is a container of classes. A scope can be used to represent different entities, which
@@ -83,14 +85,14 @@ public class Scope {
     /**
      * Find or create a list of class representations
      *
-     * @param l the list of java Class objects
+     * @param classes the list of java Class objects
      * @return the list of class representations
      */
-    public ClassInfo[] findOrCreateClass(Class<?>[] l) {
-        final ClassInfo[] a = new ClassInfo[l.length];
-        for (int i = 0; i < a.length; ++i) {
-            a[i] = findOrCreateClass(l[i]);
+    public ImmutableList<ClassInfo> findOrCreateClasses(Class<?>[] classes) {
+        ImmutableList.Builder<ClassInfo> builder = ImmutableList.builder();
+        for (Class<?> clazz : classes) {
+            builder.add(findOrCreateClass(clazz));
         }
-        return a;
+        return builder.build();
     }
 }

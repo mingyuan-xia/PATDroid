@@ -1126,14 +1126,14 @@ public final class MethodImplementationTranslator {
 	}
 	
 	private int[] rebuildArgs(MethodInfo mi, int[] args) {
-		final int realSize = mi.paramTypes.length + (mi.isStatic() ? 0 : 1);
+		final int realSize = mi.signature.paramTypes.size() + (mi.isStatic() ? 0 : 1);
 		if (realSize == args.length)
 			return args;
 		final int[] realArgs = new int[realSize];
 		int i = 0, j = 0;
 		if (!mi.isStatic())
 			realArgs[i++] = args[j++];
-		for (ClassInfo ci: mi.paramTypes) {
+		for (ClassInfo ci: mi.signature.paramTypes) {
 			realArgs[i++] = args[j++];
 			if (ci == scope.primitiveLong || ci == scope.primitiveDouble)
 				++j;
@@ -1274,19 +1274,19 @@ public final class MethodImplementationTranslator {
 			int[] args;
 			
 			if (!mi.isStatic()) {
-				args = new int[mi.paramTypes.length + 1];
-				for (int i = mi.paramTypes.length - 1; i >= 0; --i) {
-					if (mi.paramTypes[i] == scope.primitiveLong ||
-							mi.paramTypes[i] == scope.primitiveDouble)
+				args = new int[mi.signature.paramTypes.size() + 1];
+				for (int i = mi.signature.paramTypes.size() - 1; i >= 0; --i) {
+					ClassInfo paramType = mi.signature.paramTypes.get(i);
+					if (paramType == scope.primitiveLong || paramType == scope.primitiveDouble)
 						--reg;
 					args[i + 1] = --reg;
 				}
 				args[0] = --reg;
 			} else {
-				args = new int[mi.paramTypes.length];
-				for (int i = mi.paramTypes.length - 1; i >= 0; --i) {
-					if (mi.paramTypes[i] == scope.primitiveLong ||
-							mi.paramTypes[i] == scope.primitiveDouble)
+				args = new int[mi.signature.paramTypes.size()];
+				for (int i = mi.signature.paramTypes.size() - 1; i >= 0; --i) {
+                    ClassInfo paramType = mi.signature.paramTypes.get(i);
+					if (paramType == scope.primitiveLong || paramType == scope.primitiveDouble)
 						--reg;
 					args[i] = --reg;
 				}

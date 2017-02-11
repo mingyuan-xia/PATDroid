@@ -19,6 +19,7 @@
 
 package patdroid.core;
 
+import com.google.common.collect.ImmutableList;
 import patdroid.util.Log;
 
 import java.util.HashMap;
@@ -34,7 +35,7 @@ public class ClassDetailLoader {
             ExceptionInInitializerError, NoClassDefFoundError
     { throw x_x; }
 
-    protected static ClassDetail createDetail(ClassInfo superClass, ClassInfo[] interfaces,
+    protected static ClassDetail createDetail(ClassInfo superClass, ImmutableList<ClassInfo> interfaces,
                 int accessFlags, MethodInfo[] methods,
                 HashMap<String, ClassInfo> fields,
                 HashMap<String, ClassInfo> staticFields, boolean isFrameworkClass) {

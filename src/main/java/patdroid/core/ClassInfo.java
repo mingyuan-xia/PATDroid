@@ -23,6 +23,7 @@ package patdroid.core;
 import java.lang.reflect.Modifier;
 import java.util.*;
 
+import com.google.common.collect.ImmutableList;
 import patdroid.util.Log;
 
 /**
@@ -129,35 +130,11 @@ public final class ClassInfo {
 	 * Find a method declared in this class
 	 * <p>
 	 * <b>Note:</b> this might start class loading if the class is not loaded yet
-	 * @param mproto the method prototype
+	 * @param signature the method signature
 	 * @return the method in this class, or null if not found or the class is missing
 	 */
-	public MethodInfo findMethodHere(MethodInfo mproto) {
-		return (isMissing ? null : getDetails().findMethodHere(mproto));
-	}
-	
-	/**
-	 * Find a method declared in this class
-	 * <p>
-	 * <b>Note:</b> this might start class loading if the class is not loaded yet
-	 * @param name the name of the method
-	 * @param paramTypes parameter types
-	 * @return the method representation, or null if not found or the class is missing
-	 */
-	public MethodInfo findMethodHere(String name, ClassInfo[] paramTypes) {
-		return findMethodHere(MethodInfo.makePrototype(name, null, paramTypes, 0));
-	}
-	
-	/**
-	 * Find a method declared in this class
-	 * <p>
-	 * <b>Note:</b> this might start class loading if the class is not loaded yet
-	 * @param name the name of the method
-	 * @param paramTypes parameter types
-	 * @return the method representation, or null if not found or the class is missing
-	 */
-	public MethodInfo findMethodHere(String name, Class<?>... paramTypes) {
-		return findMethodHere(name, scope.findOrCreateClass(paramTypes));
+	public MethodInfo findMethodHere(MethodSignature signature) {
+		return (isMissing ? null : getDetails().methods.get(signature));
 	}
 	
 	/**
@@ -188,37 +165,13 @@ public final class ClassInfo {
 	 * Find a method with given function prototype. This might need to look into base classes 
 	 * <p>
 	 * <b>Note:</b> this might start class loading if the class is not loaded yet
-	 * @param mproto the method prototype
+	 * @param signature the method signature
 	 * @return  the method representation, or null if not found or the class is missing
 	 */
-	public MethodInfo findMethod(MethodInfo mproto) {
-		return (isMissing ? null : getDetails().findMethod(mproto));
+	public MethodInfo findMethod(MethodSignature signature) {
+		return (isMissing ? null : getDetails().findMethod(signature));
 	}
 
-	/**
-	 * Find a method. This might need to look into base classes 
-	 * <p>
-	 * <b>Note:</b> this might start class loading if the class is not loaded yet
-	 * @param name the name of the method
-	 * @param paramTypes parameter types
-	 * @return the method representation, or null if not found or the class is missing
-	 */
-	public MethodInfo findMethod(String name, ClassInfo[] paramTypes) {
-		return findMethod(MethodInfo.makePrototype(name, null, paramTypes, 0));
-	}
-
-	/**
-	 * Find a method. This might need to look into base classes
-	 * <p>
-	 * <b>Note:</b> this might start class loading if the class is not loaded yet
-	 * @param name the name of the method
-	 * @param paramTypes parameter types
-	 * @return the method representation, or null if not found or the class is missing
-	 */
-	public MethodInfo findMethod(String name, Class<?>... paramTypes) {
-		return findMethod(name, scope.findOrCreateClass(paramTypes));
-	}
-	
 	/**
 	 * TypeA is convertible to TypeB if and only if TypeB is an indirect 
 	 * superclass or an indirect interface of TypeA.
@@ -290,7 +243,7 @@ public final class ClassInfo {
 	 * Get the interfaces that the current class implements
 	 * @return interfaces
 	 */
-	public ClassInfo[] getInterfaces() { return getDetails().getInterfaces(); }
+	public ImmutableList<ClassInfo> getInterfaces() { return getDetails().interfaces; }
 
 	/**
 	 * Change the super class of this class to a new super class, the
@@ -351,7 +304,7 @@ public final class ClassInfo {
 	 * @return the default constructor, or null if not found
 	 */
 	public MethodInfo getDefaultConstructor() {
-		return findMethodHere(MethodInfo.CONSTRUCTOR, new ClassInfo[] {this});
+		return findMethodHere(new MethodSignature(MethodInfo.CONSTRUCTOR, ImmutableList.of(this)));
 	}
 	
 	/**
@@ -361,7 +314,7 @@ public final class ClassInfo {
 	 * @return the static initializer or null if not found
 	 */
 	public MethodInfo getStaticInitializer() {
-		return findMethod(MethodInfo.STATIC_INITIALIZER);
+		return findMethod(new MethodSignature(MethodInfo.STATIC_INITIALIZER, ImmutableList.<ClassInfo>of()));
 	}
 
 	/**

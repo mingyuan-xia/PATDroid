@@ -34,7 +34,7 @@ public class Main {
             if (!c.isFrameworkClass()) {
                 System.out.println(c.fullName);
                 for (MethodInfo m: c.getAllMethods()) {
-                    System.out.println("\t" + m.name);
+                    System.out.println("\t" + m.signature.name);
                 }
             }
         }
