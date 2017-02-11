@@ -21,9 +21,10 @@
 package patdroid.core;
 
 import java.lang.reflect.Modifier;
-import java.util.*;
 
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import patdroid.util.Log;
 
 /**
@@ -37,6 +38,10 @@ import patdroid.util.Log;
  * ClassInfos are obtained by find-series functions not created by constructors.
  */
 public final class ClassInfo {
+    private static final ClassDetail missingDetail = ClassDetail.create(
+            null, ImmutableList.<ClassInfo>of(), 0, ImmutableList.<MethodInfo>of(),
+            ImmutableMap.<String, ClassInfo>of(), ImmutableMap.<String, ClassInfo>of(), true);
+
 	public static ClassDetailLoader rootDetailLoader = new ClassDetailLoader();
 
 	public final Scope scope;
@@ -63,7 +68,7 @@ public final class ClassInfo {
 	 * @return if the class is a framework class
 	 */
 	public boolean isFrameworkClass() {
-		return getDetails().isFrameworkClass();
+		return getDetails().isFrameworkClass;
 	}
 
 	/**
@@ -103,8 +108,8 @@ public final class ClassInfo {
 	 * <b>Note:</b> this might start class loading if the class is not loaded yet
 	 * @return a key-value store mapping field name to their types 
 	 */
-	public HashMap<String, ClassInfo> getAllFieldsHere() {
-		return (isMissing ? null : getDetails().getAllFieldsHere());
+	public ImmutableMap<String, ClassInfo> getAllFieldsHere() {
+		return (isMissing ? null : getDetails().fields);
 	}
 	
 	/**
@@ -113,17 +118,17 @@ public final class ClassInfo {
 	 * <b>Note:</b> this might start class loading if the class is not loaded yet
 	 * @return a key-value store mapping static field name to their types 
 	 */
-	public HashMap<String, ClassInfo> getAllStaticFieldsHere() {
-		return (isMissing ? null : getDetails().getAllStaticFieldsHere());
+	public ImmutableMap<String, ClassInfo> getAllStaticFieldsHere() {
+		return (isMissing ? null : getDetails().staticFields);
 	}
 
 	/**
 	 *
 	 * @return all methods in the class
      */
-	public Collection<MethodInfo> getAllMethods() {
+	public ImmutableCollection<MethodInfo> getAllMethods() {
 		if (isMissing) return null;
-		return getDetails().getAllMethods();
+		return getDetails().methods.values();
 	}
 
 	/**
@@ -174,7 +179,7 @@ public final class ClassInfo {
 
 	/**
 	 * TypeA is convertible to TypeB if and only if TypeB is an indirect 
-	 * superclass or an indirect interface of TypeA.
+	 * base type or an indirect interface of TypeA.
 	 * <p>
 	 * <b>Note:</b> this might start class loading if the class is not loaded yet
 	 * @param type type B
@@ -193,11 +198,6 @@ public final class ClassInfo {
 		return fullName;
 	}
 	
-	@Override
-	public int hashCode() {
-		return fullName.hashCode();
-	}
-
 	/**
 	 * @return if this class is an array type
 	 */
@@ -233,10 +233,10 @@ public final class ClassInfo {
 	/**
 	 *
 	 * <b>Note:</b> this might cause class loading if the class is not loaded yet
-	 * @return the super class, or null if this class is java.lang.Object
+	 * @return the base type, or null if this class is java.lang.Object
 	 */
-	public ClassInfo getSuperClass() {
-		return getDetails().getSuperClass();
+	public ClassInfo getBaseType() {
+		return getDetails().baseType;
 	}
 
 	/**
@@ -248,12 +248,12 @@ public final class ClassInfo {
 	/**
 	 * Change the super class of this class to a new super class, the
 	 * derivedClasses will be updated accordingly.
-	 * @param superClass new super class for this class
+	 * @param baseType new super class for this class
 	 */
-	public void setSuperClass(ClassInfo superClass) {
+	public void setBaseType(ClassInfo baseType) {
 		ClassDetail origDetails = getDetails();
 		origDetails.removeDerivedClasses(this);
-		details = origDetails.changeSuperClass(superClass);
+		details = origDetails.changeBaseType(baseType);
 		details.updateDerivedClasses(this);
 	}
 
@@ -353,7 +353,7 @@ public final class ClassInfo {
 				Log.warn("Cannot find framework class def: " + fullName);
 			}
 			this.isMissing = true;
-			return ClassDetail.missingDetail;
+			return missingDetail;
 		}
 	}
 

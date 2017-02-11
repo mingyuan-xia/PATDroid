@@ -22,6 +22,8 @@ package patdroid.core;
 
 import java.util.HashMap;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableMap;
 import patdroid.util.Log;
 
 /**
@@ -36,6 +38,7 @@ public final class FieldInfo {
 	 * The name of the field
 	 */
 	public final String fieldName;
+
 	public FieldInfo(ClassInfo owner, String fieldName) {
 		this.owner = owner;
 		this.fieldName = fieldName;
@@ -52,9 +55,9 @@ public final class FieldInfo {
 	
 	@Override
 	public int hashCode() {
-		return owner.hashCode() * 31 + fieldName.hashCode();
+		return Objects.hashCode(owner, fieldName);
 	}
-	
+
 	@Override
 	public String toString() {
 		return owner.toString() + "." + fieldName;
@@ -73,17 +76,17 @@ public final class FieldInfo {
 	 * decompiling stage, thus late bind is needed.
 	 */
 	public FieldInfo bind() {
-		ClassInfo theClass = owner;
+		ClassInfo type = owner;
 		while (true) {
-			HashMap<String, ClassInfo> fields = theClass.getAllFieldsHere();
+			ImmutableMap<String, ClassInfo> fields = type.getAllFieldsHere();
 			if (fields != null && fields.containsKey(fieldName))
-				return new FieldInfo(theClass, fieldName);
-			final ClassInfo superClass = theClass.getSuperClass();
-			if (superClass == null) {
+				return new FieldInfo(type, fieldName);
+			final ClassInfo baseType = type.getBaseType();
+			if (baseType == null) {
 				Log.warn("field bind failed");
-				return new FieldInfo(theClass, fieldName);
+				return new FieldInfo(type, fieldName);
 			}
-			theClass = superClass;
+			type = baseType;
 		}
 	}
 }

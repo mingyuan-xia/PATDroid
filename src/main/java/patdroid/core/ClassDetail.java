@@ -23,6 +23,7 @@ package patdroid.core;
 import java.util.*;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import patdroid.util.Log;
 
 /**
@@ -31,26 +32,25 @@ import patdroid.util.Log;
  * The details of a class are only supposed to be filled by class loader.
  */
 public final class ClassDetail {
-	final static ClassDetail missingDetail
-		= new ClassDetail(null, ImmutableList.<ClassInfo>of(), 0, new MethodInfo[0],
-			new HashMap<String, ClassInfo>(), new HashMap<String, ClassInfo>(), true);
-	private final ClassInfo superClass;
+	public final ClassInfo baseType;
     public final ImmutableList<ClassInfo> interfaces;
-	public final HashMap<MethodSignature, MethodInfo> methods;
-	private final HashMap<String, ClassInfo> fields;
-	private final HashMap<String, ClassInfo> staticFields;
-	private final boolean isFrameworkClass;
+    public final int accessFlags;
+	public final ImmutableMap<MethodSignature, MethodInfo> methods;
+    public final ImmutableMap<String, ClassInfo> fields;
+    public final ImmutableMap<String, ClassInfo> staticFields;
+    public final boolean isFrameworkClass;
+
 	/**
 	 * A list of classes inherit this class.
 	 * Note that derivedClasses only covers loaded classes.
 	 * Use with care!
 	 */
 	public ArrayList<ClassInfo> derivedClasses = new ArrayList<ClassInfo>();
-	public final int accessFlags;
+
 	/**
 	 * Create a details class for a class.
 	 * Only a ClassDetailLoader could construct a ClassDetail
-	 * @param superClass its base class
+	 * @param baseType its base type
 	 * @param interfaces interfaces
 	 * @param accessFlags the access flags on the class
 	 * @param methods methods, stored in a name-type map
@@ -58,45 +58,32 @@ public final class ClassDetail {
 	 * @param staticFields static fields, stored in a name-type map 
 	 * @param isFrameworkClass whether it is a framework class
 	 */
-	ClassDetail(ClassInfo superClass, List<ClassInfo> interfaces,
-					   int accessFlags, MethodInfo[] methods,
-					   HashMap<String, ClassInfo> fields,
-					   HashMap<String, ClassInfo> staticFields, boolean isFrameworkClass) {
+	private ClassDetail(ClassInfo baseType, List<ClassInfo> interfaces, int accessFlags,
+                        Map<MethodSignature, MethodInfo> methods,
+                        Map<String, ClassInfo> fields, Map<String, ClassInfo> staticFields, boolean isFrameworkClass) {
 		this.accessFlags = accessFlags;
-		this.superClass = superClass;
+		this.baseType = baseType;
 		this.interfaces = ImmutableList.copyOf(interfaces);
-		this.methods = new HashMap<MethodSignature, MethodInfo>();
-		for (MethodInfo mi : methods) {
-			this.methods.put(mi.signature, mi);
-		}
-		this.fields = fields;
-		this.staticFields = new HashMap<String, ClassInfo>(staticFields);
+		this.methods = ImmutableMap.copyOf(methods);
+		this.fields = ImmutableMap.copyOf(fields);
+		this.staticFields = ImmutableMap.copyOf(staticFields);
 		this.isFrameworkClass = isFrameworkClass;
 	}
 
-	/**
-	 * Only for {@link #changeSuperClass(ClassInfo)}, should not be called by any other class.
-	 */
-	private ClassDetail(ClassInfo superClass, List<ClassInfo> interfaces,
-				int accessFlags, HashMap<MethodSignature, MethodInfo> methods,
-				HashMap<String, ClassInfo> fields,
-				HashMap<String, ClassInfo> staticFields, boolean isFrameworkClass) {
-		this.accessFlags = accessFlags;
-		this.superClass = superClass;
-		this.interfaces = ImmutableList.copyOf(interfaces);
-		this.methods = new HashMap<MethodSignature, MethodInfo>(methods);
-		this.fields = fields;
-		this.staticFields = new HashMap<String, ClassInfo>(staticFields);
-		this.isFrameworkClass = isFrameworkClass;
-	}
-
-	/**
-	 *
-	 * @return all methods in the class
-     */
-	public Collection<MethodInfo> getAllMethods() {
-		return methods.values();
-	}
+	public static ClassDetail create(ClassInfo baseType, List<ClassInfo> interfaces, int accessFlags,
+                                     List<MethodInfo> methods, Map<String, ClassInfo> fields,
+                                     Map<String, ClassInfo> staticFields, boolean isFrameworkClass) {
+	    HashMap<MethodSignature, MethodInfo> methodsBuilder = new HashMap<MethodSignature, MethodInfo>();
+	    for (MethodInfo method : methods) {
+	        if (methodsBuilder.containsKey(method.signature)) {
+	            Log.warn("Duplicate method: " + method);
+	            continue;
+            }
+	        methodsBuilder.put(method.signature, method);
+        }
+        return new ClassDetail(baseType, interfaces, accessFlags,
+                methodsBuilder, fields, staticFields, isFrameworkClass);
+    }
 
 	/**
 	 * Get the type of a non-static field. This functions will look into the base class.
@@ -108,11 +95,11 @@ public final class ClassDetail {
 		if (r != null) {
 			return r;
 		} else {
-			if (superClass == null) {
+			if (baseType == null) {
 				Log.warnwarn("failed to find field: "+ fieldName);
 				return null;
 			}
-			return superClass.getDetails().getFieldType(fieldName);
+			return baseType.getDetails().getFieldType(fieldName);
 		}
 	}
 	
@@ -126,28 +113,12 @@ public final class ClassDetail {
 		if (r != null) {
 			return r;
 		} else {
-			if (superClass == null) {
+			if (baseType == null) {
 				Log.warnwarn("failed to find static field: "+ fieldName);
 				return null;
 			}
-			return superClass.getDetails().getStaticFieldType(fieldName);
+			return baseType.getDetails().getStaticFieldType(fieldName);
 		}
-	}
-	
-	/**
-	 * Get all non-static fields declared in this class.
-	 * @return all non-static fields stored in a name-type map
-	 */
-	public HashMap<String, ClassInfo> getAllFieldsHere() {
-		return fields;
-	}
-	
-	/**
-	 * Get all static fields declared in this class.
-	 * @return all static fields stored in a name-type map
-	 */
-	public HashMap<String, ClassInfo> getAllStaticFieldsHere() {
-		return staticFields;
 	}
 	
 	/**
@@ -165,8 +136,8 @@ public final class ClassDetail {
 			if (mi != null) {
 				return mi;
 			}
-			if (detail.superClass != null) 
-				q.push(detail.superClass.getDetails());
+			if (detail.baseType != null)
+				q.push(detail.baseType.getDetails());
 			for (ClassInfo i : detail.interfaces)
 				q.push(i.getDetails());
 		}
@@ -200,8 +171,8 @@ public final class ClassDetail {
 					result.add(mi);
 			}
 			
-			if (detail.superClass != null) 
-				q.push(detail.superClass.getDetails());
+			if (detail.baseType != null)
+				q.push(detail.baseType.getDetails());
 			for (ClassInfo i : detail.interfaces)
 				q.push(i.getDetails());
 		}
@@ -225,7 +196,7 @@ public final class ClassDetail {
 	
 	/**
 	 * TypeA is convertible to TypeB if and only if TypeB is an (indirect)
-	 * superclass or an (indirect) interface of TypeA.
+	 * base type or an (indirect) interface of TypeA.
 	 *  
 	 * @param type typeB
 	 * @return if this class can be converted to the other.
@@ -235,7 +206,7 @@ public final class ClassDetail {
 		if (this == that) {
 			return true;
 		}
-		if (superClass != null && superClass.isConvertibleTo(type)) {
+		if (baseType != null && baseType.isConvertibleTo(type)) {
 			return true;
 		}
 		for (ClassInfo c : interfaces) {
@@ -248,25 +219,17 @@ public final class ClassDetail {
 		// return type.derivedClasses.contains(this);
 	}
 	
-	public final ClassInfo getSuperClass() {
-		return superClass;
-	}
-
-	public ClassDetail changeSuperClass(ClassInfo superClass) {
-		ClassDetail details = new ClassDetail(superClass, interfaces, accessFlags,
+	public ClassDetail changeBaseType(ClassInfo baseType) {
+		ClassDetail details = new ClassDetail(baseType, interfaces, accessFlags,
 				methods, fields, staticFields, isFrameworkClass);
 		details.derivedClasses = this.derivedClasses;
 		return details;
 	}
 	
-	public final boolean isFrameworkClass() {
-		return this.isFrameworkClass;
-	}
-
 	public final void updateDerivedClasses(ClassInfo ci) {
 		ArrayDeque<ClassDetail> a = new ArrayDeque<ClassDetail>();
-		if (superClass != null)
-			a.add(superClass.getDetails());
+		if (baseType != null)
+			a.add(baseType.getDetails());
 		for (ClassInfo i : interfaces) {
 			a.add(i.getDetails());
 		}
@@ -274,8 +237,8 @@ public final class ClassDetail {
 			ClassDetail detail = a.pop();
 			detail.derivedClasses.add(ci);
 			detail.derivedClasses.addAll(derivedClasses);
-			if (detail.superClass != null)
-				a.add(detail.superClass.getDetails());
+			if (detail.baseType != null)
+				a.add(detail.baseType.getDetails());
 			for (ClassInfo i : detail.interfaces) {
 				a.add(i.getDetails());
 			}
@@ -284,8 +247,8 @@ public final class ClassDetail {
 
 	public final void removeDerivedClasses(ClassInfo ci) {
 		ArrayDeque<ClassDetail> a = new ArrayDeque<ClassDetail>();
-		if (superClass != null)
-			a.add(superClass.getDetails());
+		if (baseType != null)
+			a.add(baseType.getDetails());
 		for (ClassInfo i : interfaces) {
 			a.add(i.getDetails());
 		}
@@ -293,12 +256,11 @@ public final class ClassDetail {
 			ClassDetail detail = a.pop();
 			detail.derivedClasses.remove(ci);
 			detail.derivedClasses.removeAll(derivedClasses);
-			if (detail.superClass != null)
-				a.add(detail.superClass.getDetails());
+			if (detail.baseType != null)
+				a.add(detail.baseType.getDetails());
 			for (ClassInfo i : detail.interfaces) {
 				a.add(i.getDetails());
 			}
 		}
 	}
-
 }

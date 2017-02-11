@@ -30,7 +30,7 @@ import java.util.Arrays;
  * The method representation.
  * <p>
  * This class contains an immutable function signature
- * and changeable info such as local variables, instructions
+ * and mutable info such as local variables, instructions
  * and analysis-specific tags
  * </p>
  * <p> Constructors have a special name "&lt;init&gt;" </p>
@@ -41,9 +41,9 @@ public final class MethodInfo {
 	public static final String CONSTRUCTOR = "<init>";
 
 	/**
-	 * The class containing this method. For a method signature, this is null.
+	 * The type containing this method.
 	 */
-	public final ClassInfo myClass;
+	public final ClassInfo type;
 	/** 
 	 * The signature of the method
 	 */
@@ -73,13 +73,13 @@ public final class MethodInfo {
 
 	/**
 	 * Create a method info that is part of a class
-	 * @param myClass the class
+	 * @param type the class
 	 * @param signature the method signature
 	 * @param returnType the return type
 	 * @param accessFlags the access flags
 	 */
-	public MethodInfo(ClassInfo myClass, MethodSignature signature, ClassInfo returnType, int accessFlags) {
-		this.myClass = myClass;
+	public MethodInfo(ClassInfo type, MethodSignature signature, ClassInfo returnType, int accessFlags) {
+		this.type = type;
 		this.signature = signature;
 		this.returnType = returnType;
 		this.modifiers = accessFlags;
@@ -105,13 +105,13 @@ public final class MethodInfo {
 	 */
 	public MethodInfo getOverridingMethod() {
 		if (this.isConstructor() || this.isStatic()) return null;
-		final ClassInfo superClass = this.myClass.getSuperClass();
+		final ClassInfo baseType = this.type.getBaseType();
 		MethodInfo matching;
-		if (superClass != null) {
-			matching = superClass.findMethod(signature);
+		if (baseType != null) {
+			matching = baseType.findMethod(signature);
 			if (matching != null) return matching;
 		}
-		for (ClassInfo intf: this.myClass.getInterfaces()) {
+		for (ClassInfo intf: this.type.getInterfaces()) {
 			matching = intf.findMethod(signature);
 			if (matching != null) return matching;
 		}
@@ -120,7 +120,7 @@ public final class MethodInfo {
 
 	@Override
 	public String toString() {
-		String s = (myClass == null ? "" : myClass.toString());
+		String s = (type == null ? "" : type.toString());
 		return s + "/" + signature;
 	}
 
@@ -132,7 +132,7 @@ public final class MethodInfo {
 	 */
 	public boolean canOverride(MethodInfo m) {
 		return this == m ||
-			(this.myClass.isConvertibleTo(m.myClass) && this.signature.equals(m.signature));
+			(this.type.isConvertibleTo(m.type) && this.signature.equals(m.signature));
 	}
 
 	/**

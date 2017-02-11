@@ -21,23 +21,23 @@ public class ReflectionClassDetailLoader extends ClassDetailLoader {
     }
 
     @Override
-    public void load(ClassInfo ci) throws ClassNotFoundException,
+    public void load(ClassInfo type) throws ClassNotFoundException,
             ExceptionInInitializerError, NoClassDefFoundError {
-        String fullName = ci.toString();
+        String fullName = type.toString();
         Class<?> c = null;
-        if (ci.isArray()) {
+        if (type.isArray()) {
             c = int[].class; // use int[] for generic array
         } else {
             c = Class.forName(fullName);
         }
-        ClassInfo superClass = scope.findOrCreateClass(c.getSuperclass());
+        ClassInfo baseType = scope.findOrCreateClass(c.getSuperclass());
 		/*
 		 * Java spec: When an interface has no direct SuperInterface , it will
 		 * create abstract public method for all those public methods present in
 		 * the Object class
 		 */
-        if (superClass == null && c.isInterface()) {
-            superClass = scope.rootObject;
+        if (baseType == null && c.isInterface()) {
+            baseType = scope.rootObject;
         }
 
         ArrayList<MethodInfo> methods = new ArrayList<MethodInfo>();
@@ -56,37 +56,36 @@ public class ReflectionClassDetailLoader extends ClassDetailLoader {
             }
         }
         if (hasStaticFields) {
-            methods.add(new MethodInfo(ci, MethodSignature.of(MethodInfo.STATIC_INITIALIZER),
+            methods.add(new MethodInfo(type, MethodSignature.of(MethodInfo.STATIC_INITIALIZER),
                     scope.primitiveVoid, Modifier.STATIC));
         }
         // TODO: do we actually need this?? I think the synthetic fields are included in declared fields
         // see http://www.public.iastate.edu/~java/docs/guide/innerclasses/html/innerclasses.doc.html
-        if (ci.isInnerClass()) {
+        if (type.isInnerClass()) {
             // say A is inside B and B is inside C
             // then in C, this$0 is A.this, this$1 is B.this
-            fields.put("this$0", ci.getOuterClass());
+            fields.put("this$0", type.getOuterClass());
         }
 
         // transform the class methods
         for (Method m : c.getDeclaredMethods()) {
             MethodSignature signature = MethodSignature.of(scope, m.getName(), m.getParameterTypes());
             ClassInfo returnType = scope.findOrCreateClass(m.getReturnType());
-            methods.add(new MethodInfo(ci, signature, returnType, m.getModifiers()));
+            methods.add(new MethodInfo(type, signature, returnType, m.getModifiers()));
         }
 
         // transform the class constructors
         for (Constructor<?> m : c.getDeclaredConstructors()) {
             MethodSignature signature = MethodSignature.of(scope, MethodInfo.CONSTRUCTOR, m.getParameterTypes());
             ClassInfo returnType = scope.primitiveVoid;
-            methods.add(new MethodInfo(ci, signature, returnType, m.getModifiers()));
+            methods.add(new MethodInfo(type, signature, returnType, m.getModifiers()));
         }
 
         // transform interfaces
         ImmutableList<ClassInfo> interfaces = scope.findOrCreateClasses(c.getInterfaces());
 
         // loaded as a framework class
-        setDetails(ci, createDetail(superClass, interfaces,
-                c.getModifiers(), methods.toArray(new MethodInfo[methods.size()]),
-                fields, staticFields, true));
+        setDetails(type, ClassDetail.create(baseType, interfaces, c.getModifiers(),
+                                            methods, fields, staticFields, true));
     }
 }

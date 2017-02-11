@@ -5,8 +5,8 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -133,16 +133,15 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
 
     private ClassDetail translateClassDef(
             ClassInfo ci, ClassDef classDef) {
-        ClassInfo superClass;
+        ClassInfo baseType;
         if (classDef.getSuperclass() == null) {
-            superClass = null; // for java.lang.Object
+            baseType = null; // for java.lang.Object
         } else {
-            superClass = Dalvik.findOrCreateClass(ci.scope, classDef.getSuperclass());
+            baseType = Dalvik.findOrCreateClass(ci.scope, classDef.getSuperclass());
         }
         final ImmutableList<ClassInfo> interfaces = findOrCreateClasses(ci.scope, classDef.getInterfaces());
         final int accessFlags = translateAccessFlags(classDef.getAccessFlags());
-        final MethodInfo[] methods = translateMethods(ci,
-                classDef.getMethods());
+        final ImmutableList<MethodInfo> methods = translateMethods(ci, classDef.getMethods());
         final HashMap<String, ClassInfo> fields = translateFields(
                 ci.scope, classDef.getInstanceFields());
         // TODO: do we need this?
@@ -151,8 +150,7 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         }
         final HashMap<String, ClassInfo> staticFields = translateFields(
                 ci.scope, classDef.getStaticFields());
-        return createDetail(superClass, interfaces,
-                accessFlags, methods, fields, staticFields, isFramework);
+        return ClassDetail.create(baseType, interfaces, accessFlags, methods, fields, staticFields, isFramework);
     }
 
     private MethodInfo translateMethod(ClassInfo ci, Method method) {
@@ -175,13 +173,12 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         return mi;
     }
 
-    private MethodInfo[] translateMethods(ClassInfo ci,
-                                          Iterable<? extends Method> methods) {
-        ArrayList<MethodInfo> result = new ArrayList<MethodInfo>();
-        for (Method method: methods) {
-            result.add(translateMethod(ci, method));
+    private ImmutableList<MethodInfo> translateMethods(ClassInfo ci, Iterable<? extends Method> methods) {
+        ImmutableList.Builder<MethodInfo> builder = ImmutableList.builder();
+        for (Method method : methods) {
+            builder.add(translateMethod(ci, method));
         }
-        return result.toArray(new MethodInfo[result.size()]);
+        return builder.build();
     }
 
     private HashMap<String, ClassInfo> translateFields(

@@ -19,6 +19,7 @@
 
 package patdroid.core;
 
+import com.google.common.base.Objects;
 import patdroid.util.Log;
 
 /**
@@ -29,27 +30,21 @@ public final class PrimitiveInfo {
 	/**
 	 * The class object of the value type
 	 */
-	final private ClassInfo kind;
+	public final ClassInfo type;
 	/**
 	 * 64-bit store for primitive types
 	 */
 	public final int low32;
 	public final int high32;
 	
-	/**
-	 * Low-level internal constructor
-	 * @param kind
-	 * @param low32
-	 * @param high32
-	 */
-	private PrimitiveInfo(ClassInfo kind, int low32, int high32) {
-		this.kind = kind;
+	private PrimitiveInfo(ClassInfo type, int low32, int high32) {
+		this.type = type;
 		this.low32 = low32;
 		this.high32 = high32;
 	}
 	
-	private PrimitiveInfo(ClassInfo kind, long l) {
-		this.kind = kind;
+	private PrimitiveInfo(ClassInfo type, long l) {
+		this.type = type;
 		this.low32 = (int)l;
 		this.high32 = (int)(l >> 32);
 	}
@@ -82,29 +77,25 @@ public final class PrimitiveInfo {
 	 */
 	public static PrimitiveInfo fromObject(Scope scope, Object o) {
 		if (o instanceof Integer) {
-			return fromInt(scope, ((Integer) o).intValue());
+			return fromInt(scope, (Integer) o);
 		} else if (o instanceof Short) {
-			return fromInt(scope, ((Short) o).intValue());
+			return fromInt(scope, (Short) o);
 		} else if (o instanceof Byte) {
-			return fromInt(scope, ((Byte) o).intValue());
+			return fromInt(scope, (Byte) o);
 		} else if (o instanceof Long) {
-			return fromLong(scope, ((Long) o).longValue());
+			return fromLong(scope, (Long) o);
 		} else if (o instanceof Float) {
-			return fromFloat(scope, ((Float) o).floatValue());
+			return fromFloat(scope, (Float) o);
 		} else if (o instanceof Double) {
-			return fromDouble(scope, ((Double) o).doubleValue());
+			return fromDouble(scope, (Double) o);
 		} else if (o instanceof Boolean) {
-			return fromBoolean(scope, ((Boolean) o).booleanValue());
+			return fromBoolean(scope, (Boolean) o);
 		} else {
 			Log.err("unsupported object to ValueInfo" + o.getClass().toString());
 			return null;
 		}
 	}
 
-	public final ClassInfo getKind() {
-		return kind;
-	}
-	
 	private long getLong() {
 		return (((long)high32) << 32) | (low32 & 0xffffffffL);
 	}
@@ -134,25 +125,21 @@ public final class PrimitiveInfo {
 		return low32 == 1;
 	}
 
-	private final Scope scope() {
-	    return (Scope) this.kind.scope;
-    }
-
     public PrimitiveInfo unsafeCastTo(ClassInfo targetType) {
         Log.doAssert(targetType.isPrimitive(), "must cast to a primitive type");
-        if (targetType == scope().primitiveChar ||
-                targetType == scope().primitiveShort ||
-                targetType == scope().primitiveByte) {
-            targetType = scope().primitiveInt;
+        if (targetType == type.scope.primitiveChar ||
+                targetType == type.scope.primitiveShort ||
+                targetType == type.scope.primitiveByte) {
+            targetType = type.scope.primitiveInt;
         }
         return new PrimitiveInfo(targetType, low32, high32);
     }
 
     public final PrimitiveInfo castTo(ClassInfo targetType) {
 		Log.doAssert(targetType.isPrimitive(), "must cast to a primitive type");
-        Log.doAssert(targetType.scope == scope(), "must be in the same scope");
+        Log.doAssert(targetType.scope == type.scope, "must be in the same scope");
 		PrimitiveInfo v = null;
-		if (targetType == scope().primitiveInt) {
+		if (targetType == type.scope.primitiveInt) {
 			int val = 0;
 			if (isLong()) {
 				val = (int) longValue();
@@ -165,8 +152,8 @@ public final class PrimitiveInfo {
 			} else if (isDouble()) {
 				val = (int) doubleValue();
 			}
-			v = fromInt(scope(), val);
-		} else if (targetType == scope().primitiveLong) {
+			v = fromInt(type.scope, val);
+		} else if (targetType == type.scope.primitiveLong) {
 			long val = 0l;
 			if (isLong()) {
 				val = (long) longValue();
@@ -179,8 +166,8 @@ public final class PrimitiveInfo {
 			} else if (isDouble()) {
 				val = (long) doubleValue();
 			}
-			v = fromLong(scope(), val);
-		} else if (targetType == scope().primitiveFloat) {
+			v = fromLong(type.scope, val);
+		} else if (targetType == type.scope.primitiveFloat) {
 			float val = 0f;
 			if (isLong()) {
 				val = (float) longValue();
@@ -193,8 +180,8 @@ public final class PrimitiveInfo {
 			} else if (isDouble()) {
 				val = (float) doubleValue();
 			}
-			v = fromFloat(scope(), val);
-		} else if (targetType == scope().primitiveDouble) {
+			v = fromFloat(type.scope, val);
+		} else if (targetType == type.scope.primitiveDouble) {
 			double val = 0.0;
 			if (isLong()) {
 				val = (double) longValue();
@@ -207,9 +194,9 @@ public final class PrimitiveInfo {
 			} else if (isDouble()) {
 				val = (double) doubleValue();
 			}
-			v = fromDouble(scope(), val);
+			v = fromDouble(type.scope, val);
 		} else { // short, boolean, char, byte
-			v = new PrimitiveInfo(scope().primitiveInt, this.low32);
+			v = new PrimitiveInfo(type.scope.primitiveInt, this.low32);
 		}
 		return v;
 	}
@@ -223,23 +210,23 @@ public final class PrimitiveInfo {
 	}
 
 	public final boolean isInteger() {
-		return kind == scope().primitiveInt;
+		return type == type.scope.primitiveInt;
 	}
 
 	public final boolean isLong() {
-		return kind == scope().primitiveLong;
+		return type == type.scope.primitiveLong;
 	}
 	
 	public final boolean isDouble() {
-		return kind == scope().primitiveDouble;
+		return type == type.scope.primitiveDouble;
 	}
 
 	public final boolean isFloat() {
-		return kind == scope().primitiveFloat;
+		return type == type.scope.primitiveFloat;
 	}
 
 	public final boolean isBoolean() {
-		return kind == scope().primitiveBoolean;
+		return type == type.scope.primitiveBoolean;
 	}
 
 	public final boolean isZero() {
@@ -252,7 +239,7 @@ public final class PrimitiveInfo {
 	 * @return true if the two values are of same type
 	 */
 	public final boolean isSameType(PrimitiveInfo that) {
-		return this.kind == that.kind;
+		return this.type == that.type;
 	}
 
 	@Override
@@ -269,7 +256,7 @@ public final class PrimitiveInfo {
 		} else if (isDouble()) {
 			return prefix + doubleValue();
 		} else {
-			Log.err("unsupported ValueInfo kind " + kind);
+			Log.err("unsupported ValueInfo type " + type);
 			return "";
 		}
 	}
@@ -286,25 +273,22 @@ public final class PrimitiveInfo {
 		} else if (isDouble()) {
 			return ""+doubleValue();
 		} else {
-			Log.err("unsupported ValueInfo kind " + kind);
+			Log.err("unsupported ValueInfo type " + type);
 			return "";
 		}
 	}
-	
-	@Override
-	public boolean equals(Object o) {
-		if (o instanceof PrimitiveInfo) {
-			final PrimitiveInfo v = (PrimitiveInfo) o;
-			return v.kind == kind && v.low32 == low32 && v.high32 == high32;
-		} else {
-			Log.warnwarn("ValueInfo compared with a non-ValueInfo");
-			return false;
-		}
-	}
-	
+
 	@Override
 	public int hashCode() {
-		return (int) (kind.hashCode() * 667 + low32 * 333 + high32);
+		return Objects.hashCode(type, low32, high32);
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (!(o instanceof PrimitiveInfo)) {
+			return false;
+		}
+		final PrimitiveInfo v = (PrimitiveInfo) o;
+		return v.type == type && v.low32 == low32 && v.high32 == high32;
+	}
 }
