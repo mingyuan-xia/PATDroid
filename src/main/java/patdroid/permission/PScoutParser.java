@@ -72,7 +72,7 @@ public class PScoutParser {
         returnType = a[0].trim().split(" ")[0];
         methodName = a[0].trim().split(" ")[1];
         paramTypes = a[1].replace(" ", "").split(",");
-        final MethodSignature signature = new MethodSignature(methodName, findOrCreateClass(paramTypes));
+        final MethodSignature signature = new MethodSignature(methodName, findOrCreateClasses(paramTypes));
         ClassInfo ci = scope.findOrCreateClass(className);
         return (ci == null ? null : ci.findMethod(signature));
     }
@@ -103,10 +103,10 @@ public class PScoutParser {
         }
     }
 
-    public ImmutableList<ClassInfo> findOrCreateClass(String[] fullNames) {
+    public ImmutableList<ClassInfo> findOrCreateClasses(String[] fullNames) {
         ImmutableList.Builder<ClassInfo> builder = ImmutableList.builder();
-        for (int i = 0; i < fullNames.length; ++i) {
-            builder.add(findOrCreateClass(fullNames[i]));
+        for (String fullName : fullNames) {
+            builder.add(findOrCreateClass(fullName));
         }
         return builder.build();
     }

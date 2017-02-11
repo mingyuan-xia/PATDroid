@@ -73,16 +73,12 @@ public final class ClassDetail {
 	public static ClassDetail create(ClassInfo baseType, List<ClassInfo> interfaces, int accessFlags,
                                      List<MethodInfo> methods, Map<String, ClassInfo> fields,
                                      Map<String, ClassInfo> staticFields, boolean isFrameworkClass) {
-	    HashMap<MethodSignature, MethodInfo> methodsBuilder = new HashMap<MethodSignature, MethodInfo>();
+	    ImmutableMap.Builder<MethodSignature, MethodInfo> methodsBuilder = ImmutableMap.builder();
 	    for (MethodInfo method : methods) {
-	        if (methodsBuilder.containsKey(method.signature)) {
-	            Log.warn("Duplicate method: " + method);
-	            continue;
-            }
 	        methodsBuilder.put(method.signature, method);
         }
         return new ClassDetail(baseType, interfaces, accessFlags,
-                methodsBuilder, fields, staticFields, isFrameworkClass);
+                methodsBuilder.build(), fields, staticFields, isFrameworkClass);
     }
 
 	/**

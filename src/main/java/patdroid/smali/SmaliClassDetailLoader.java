@@ -176,6 +176,10 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
     private ImmutableList<MethodInfo> translateMethods(ClassInfo ci, Iterable<? extends Method> methods) {
         ImmutableList.Builder<MethodInfo> builder = ImmutableList.builder();
         for (Method method : methods) {
+            // TODO(iceboy): Put synthetic into MethodSignature, as they have the same name as non-synthetic methods.
+            if (AccessFlags.SYNTHETIC.isSet(method.getAccessFlags())) {
+                continue;
+            }
             builder.add(translateMethod(ci, method));
         }
         return builder.build();

@@ -304,7 +304,7 @@ public final class ClassInfo {
 	 * @return the default constructor, or null if not found
 	 */
 	public MethodInfo getDefaultConstructor() {
-		return findMethodHere(new MethodSignature(MethodInfo.CONSTRUCTOR, ImmutableList.of(this)));
+		return findMethodHere(MethodSignature.of(MethodInfo.CONSTRUCTOR, this));
 	}
 	
 	/**
@@ -314,7 +314,7 @@ public final class ClassInfo {
 	 * @return the static initializer or null if not found
 	 */
 	public MethodInfo getStaticInitializer() {
-		return findMethod(new MethodSignature(MethodInfo.STATIC_INITIALIZER, ImmutableList.<ClassInfo>of()));
+		return findMethod(MethodSignature.of(MethodInfo.STATIC_INITIALIZER));
 	}
 
 	/**
