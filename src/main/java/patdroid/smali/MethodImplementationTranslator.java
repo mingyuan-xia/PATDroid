@@ -22,7 +22,6 @@
 
 package patdroid.smali;
 
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -40,7 +39,6 @@ import org.jf.dexlib2.iface.reference.*;
 import patdroid.core.*;
 import patdroid.dalvik.Dalvik;
 import patdroid.dalvik.Instruction;
-import patdroid.dalvik.InvocationResolver;
 import patdroid.util.Log;
 import patdroid.util.Pair;
 
@@ -1125,16 +1123,17 @@ public final class MethodImplementationTranslator {
         return i;
     }
 
-    private int[] rebuildArgs(MethodInfo mi, int[] args) {
-        final int realSize = mi.signature.paramTypes.size() + (mi.isStatic() ? 0 : 1);
+    private int[] rebuildArgs(MethodReference mr, int[] args, boolean isStatic) {
+        final int realSize = mr.getParameterTypes().size() + (isStatic ? 0 : 1);
         if (realSize == args.length)
             return args;
         final int[] realArgs = new int[realSize];
         int i = 0, j = 0;
-        if (!mi.isStatic())
+        if (!isStatic)
             realArgs[i++] = args[j++];
-        for (ClassInfo ci: mi.signature.paramTypes) {
+        for (CharSequence smaliType: mr.getParameterTypes()) {
             realArgs[i++] = args[j++];
+            final ClassInfo ci = scope.findOrCreateClass(smaliType.toString());
             if (ci == scope.primitiveLong || ci == scope.primitiveDouble)
                 ++j;
         }
@@ -1145,7 +1144,7 @@ public final class MethodImplementationTranslator {
     private Instruction translateInvoke(final Instruction35c i5) {
         final Instruction i = new Instruction();
         i.opcode = Instruction.OP_INVOKE_OP;
-        int accessFlags = 0;
+        boolean isStatic = false;
         switch (i5.getOpcode()) {
         case INVOKE_VIRTUAL:
             i.opcode_aux = Instruction.OP_INVOKE_VIRTUAL;
@@ -1158,16 +1157,15 @@ public final class MethodImplementationTranslator {
             break;
         case INVOKE_STATIC:
             i.opcode_aux = Instruction.OP_INVOKE_STATIC;
-            accessFlags = Modifier.STATIC;
+            isStatic = true;
             break;
         case INVOKE_INTERFACE:
             i.opcode_aux = Instruction.OP_INVOKE_INTERFACE;
             break;
         }
-        final MethodReference method = (MethodReference) i5.getReference();
-        final MethodInfo mi = SmaliClassDetailLoader.translateMethodReference(scope, method, accessFlags);
-        final int[] args = rebuildArgs(mi, getArguments(i5));
-        i.extra = new Object[] {mi, args};
+        final MethodReference mr = (MethodReference) i5.getReference();
+        final int[] args = rebuildArgs(mr, getArguments(i5), isStatic);
+        i.extra = new Object[] {scope, mr, isStatic, args};
         resolver.registerForResolve(this.mi, currentCodeIndex);
         return i;
     }
@@ -1175,7 +1173,7 @@ public final class MethodImplementationTranslator {
     private Instruction translateInvoke(final Instruction3rc ir) {
         final Instruction i = new Instruction();
         i.opcode = Instruction.OP_INVOKE_OP;
-        int accessFlags = 0;
+        boolean isStatic = false;
         switch (ir.getOpcode()) {
         case INVOKE_VIRTUAL_RANGE:
             i.opcode_aux = Instruction.OP_INVOKE_VIRTUAL;
@@ -1188,16 +1186,15 @@ public final class MethodImplementationTranslator {
             break;
         case INVOKE_STATIC_RANGE:
             i.opcode_aux = Instruction.OP_INVOKE_STATIC;
-            accessFlags = Modifier.STATIC;
+			isStatic = true;
             break;
         case INVOKE_INTERFACE_RANGE:
             i.opcode_aux = Instruction.OP_INVOKE_INTERFACE;
             break;
         }
-        final MethodReference method = (MethodReference) ir.getReference();
-        final MethodInfo mi = SmaliClassDetailLoader.translateMethodReference(scope, method, accessFlags);
-        final int[] args = rebuildArgs(mi, getArguments(ir));
-        i.extra = new Object[] {mi, args};
+        final MethodReference mr = (MethodReference) ir.getReference();
+        final int[] args = rebuildArgs(mr, getArguments(ir), isStatic);
+        i.extra = new Object[] {scope, mr, isStatic, args};
         resolver.registerForResolve(this.mi, currentCodeIndex);
         return i;
     }

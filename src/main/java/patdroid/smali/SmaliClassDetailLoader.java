@@ -24,7 +24,6 @@ import org.jf.dexlib2.iface.reference.MethodReference;
 
 import patdroid.Settings;
 import patdroid.core.*;
-import patdroid.dalvik.InvocationResolver;
 import patdroid.util.Log;
 
 import patdroid.dalvik.Dalvik;
@@ -218,7 +217,8 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         return f;
     }
 
-    static MethodInfo translateMethodReference(Scope scope, MethodReference method, int accessFlags) {
+    public static MethodInfo translateMethodReference(Scope scope, MethodReference method, boolean isStatic) {
+        int accessFlags = isStatic ? Modifier.STATIC : 0;
         ClassInfo ci = Dalvik.findOrCreateClass(scope, method.getDefiningClass());
         ClassInfo retType = Dalvik.findOrCreateClass(scope, method.getReturnType());
         ImmutableList<ClassInfo> paramTypes = findOrCreateClasses(scope, method.getParameterTypes());

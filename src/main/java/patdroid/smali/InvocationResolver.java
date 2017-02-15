@@ -17,9 +17,16 @@
 *   Mingyuan Xia
 */
 
-package patdroid.dalvik;
+package patdroid.smali;
 
+import com.google.common.collect.ImmutableList;
+import org.jf.dexlib2.iface.reference.MethodReference;
+import patdroid.core.ClassInfo;
 import patdroid.core.MethodInfo;
+import patdroid.core.MethodSignature;
+import patdroid.core.Scope;
+import patdroid.dalvik.Instruction;
+import patdroid.smali.SmaliClassDetailLoader;
 import patdroid.util.Log;
 import patdroid.util.Pair;
 
@@ -45,12 +52,18 @@ public class InvocationResolver {
             final int insn_idx = p.second.intValue();
             final Instruction i = p.first.insns[insn_idx];
             final Object[] params = (Object[]) i.extra;
-            final MethodInfo method = (MethodInfo) params[0];
-            params[0] = method.type.findMethod(method.signature);
+            final Scope scope = (Scope) params[0];
+            final MethodReference mr = (MethodReference) params[1];
+            final boolean isStatic = (Boolean) params[2];
+            final int[] args = (int[]) params[3];
+            final MethodInfo realMethod = SmaliClassDetailLoader.translateMethodReference(scope, mr, isStatic);
             if (params[0] == null) {
-                Log.debug("Cannot resolve method invocation, replace with HALT: " + method);
+                Log.debug("Cannot resolve method invocation, replace with HALT: " + mr);
                 i.opcode = Instruction.OP_HALT;
+            } else {
+                i.extra = new Object[]{realMethod, args};
             }
         }
+        a.clear();
     }
 }

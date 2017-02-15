@@ -64,7 +64,7 @@ public final class ClassInfo {
      * @return if the class is a framework class
      */
     public boolean isFrameworkClass() {
-        return MISSING_DETAIL.isFrameworkClass;
+        return mutableDetail.isFrameworkClass;
     }
 
     /**

@@ -3,6 +3,7 @@ package patdroid;
 import patdroid.core.ClassInfo;
 import patdroid.core.MethodInfo;
 import patdroid.core.Scope;
+import patdroid.dalvik.Instruction;
 import patdroid.smali.SmaliClassDetailLoader;
 
 import java.io.File;
@@ -35,6 +36,10 @@ public class Main {
                 System.out.println(c.fullName);
                 for (MethodInfo m: c.getAllMethods()) {
                     System.out.println("\t" + m.signature.name);
+                    if (m.insns == null) continue;
+                    for (Instruction i: m.insns) {
+                        System.out.println("\t\t" + i.toString());
+                    }
                 }
             }
         }
