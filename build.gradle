@@ -57,7 +57,7 @@ uploadArchives {
            authentication(userName: ossrhUsername, password: ossrhPassword)
          }
       }
-      
+
 
       pom.project {
         name 'PATDroid'

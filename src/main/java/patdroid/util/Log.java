@@ -86,8 +86,8 @@ public class Log {
     public static void resetIndent() { indent.remove(); }
     public static void doAssert(boolean b, String msg) { if (!b) { err(msg); } }
     public static void msg(String format, Object... args) { msg(String.format(format, args)); }
-    public static void msg(String s) { log(MODE_MSG, "MSG", s);	}
-    public static void debug(String format, Object... args) { debug(String.format(format, args));	}
+    public static void msg(String s) { log(MODE_MSG, "MSG", s);    }
+    public static void debug(String format, Object... args) { debug(String.format(format, args));    }
     public static void debug(String s) { log(MODE_DEBUG, "DEBUG", s); }
 
     private static String exceptionToString(Exception e) {
@@ -99,11 +99,11 @@ public class Log {
         return s;
     }
 
-    public static void warn(String format, Object... args) { warn(String.format(format, args));	}
+    public static void warn(String format, Object... args) { warn(String.format(format, args));    }
     public static void warn(Exception e) { warn(exceptionToString(e)); }
     public static void warn(String s) { badlog(MODE_WARNING, "WARN", s); }
     // forgive me for these cute names
-    public static void warnwarn(String format, Object... args) { warnwarn(String.format(format, args));	}
+    public static void warnwarn(String format, Object... args) { warnwarn(String.format(format, args));    }
     public static void warnwarn(String s) { badlog(MODE_SEVERE_WARNING, "WARN*", s); }
     public static void warnwarn(boolean b, String s) { if (!b) { warnwarn(s); } }
     public static void err(Exception e) { err(exceptionToString(e)); }

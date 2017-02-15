@@ -14,7 +14,7 @@ Here is a one-sentence description for each package. Find the detailed usage tut
 * [`patdroid.permission`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-permission): specify what Android permissions are needed for every Android APIs
 * [`patdroid.fs`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-fs): an emulated and simplified Android file system
 * [`patdroid.dalvik`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-dalvik): Android Dalvik JVM instructions and representations
-* [`patdroid.smali`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-smali): using [SMALI](https://github.com/JesusFreke/smali) to extract classes, methods, fields and instructions from an APK 
+* [`patdroid.smali`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-smali): using [SMALI](https://github.com/JesusFreke/smali) to extract classes, methods, fields and instructions from an APK
 
 According to our blueprint, we plan to release the following components one by one in the near future:
 * ~~`patdroid.dex2jar`: using [dex2jar](https://github.com/pxb1988/dex2jar) to extract classes, methods, fields and instructions from an APK~~
@@ -31,11 +31,11 @@ You can find out more details from our [S&P'15 paper](http://www.ieee-security.o
 We make part of AppAudit public to be useful to researchers and developers.
 Overall, we try to make the entire project
 
-1. concise (with fewer abstractions as possible such that users wont feel like searching a needle in the ocean) 
+1. concise (with fewer abstractions as possible such that users wont feel like searching a needle in the ocean)
 2. properly documented (javadoc, and wiki tutorial)
 3. loosely coupled (packages trying to be self-contained)
 4. efficient (graduate students need life with bf/gf not waiting for computers to complete analyses)
-5. look like good code 
+5. look like good code
 
 If you want to contribute, make sure you follow these traditions and feel free to submit a pull request.
 Note that quick-and-dirty patches require many efforts to make them ready, and thus take more time to merge.

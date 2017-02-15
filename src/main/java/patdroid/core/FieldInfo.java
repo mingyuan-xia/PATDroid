@@ -28,63 +28,63 @@ import patdroid.util.Log;
  * The representation of a field in a class
  */
 public final class FieldInfo {
-	/**
-	 * The owning class of this filed
-	 */
-	public final ClassInfo owner;
-	/**
-	 * The name of the field
-	 */
-	public final String fieldName;
+    /**
+     * The owning class of this filed
+     */
+    public final ClassInfo owner;
+    /**
+     * The name of the field
+     */
+    public final String fieldName;
 
-	public FieldInfo(ClassInfo owner, String fieldName) {
-		this.owner = owner;
-		this.fieldName = fieldName;
-	}
-	
-	@Override
-	public boolean equals(Object o) {
-		if (!(o instanceof FieldInfo)) {
-			return false;
-		}
-		final FieldInfo that = (FieldInfo)o;
-		return owner == that.owner && this.fieldName.equals(that.fieldName);
-	}
-	
-	@Override
-	public int hashCode() {
-		return Objects.hashCode(owner, fieldName);
-	}
+    public FieldInfo(ClassInfo owner, String fieldName) {
+        this.owner = owner;
+        this.fieldName = fieldName;
+    }
 
-	@Override
-	public String toString() {
-		return owner.toString() + "." + fieldName;
-	}
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof FieldInfo)) {
+            return false;
+        }
+        final FieldInfo that = (FieldInfo)o;
+        return owner == that.owner && this.fieldName.equals(that.fieldName);
+    }
 
-	public final ClassInfo getFieldType() {
-		return owner.getFieldType(fieldName);
-	}
-	
-	public boolean isValid() {
-		return owner.getFieldType(fieldName) != null;
-	}
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(owner, fieldName);
+    }
 
-	/*
-	 * Bind to the real owner of the field, which may not be loaded at
-	 * decompiling stage, thus late bind is needed.
-	 */
-	public FieldInfo bind() {
-		ClassInfo type = owner;
-		while (true) {
-			ImmutableMap<String, ClassInfo> fields = type.getAllFieldsHere();
-			if (fields != null && fields.containsKey(fieldName))
-				return new FieldInfo(type, fieldName);
-			final ClassInfo baseType = type.getBaseType();
-			if (baseType == null) {
-				Log.warn("field bind failed");
-				return new FieldInfo(type, fieldName);
-			}
-			type = baseType;
-		}
-	}
+    @Override
+    public String toString() {
+        return owner.toString() + "." + fieldName;
+    }
+
+    public final ClassInfo getFieldType() {
+        return owner.getFieldType(fieldName);
+    }
+
+    public boolean isValid() {
+        return owner.getFieldType(fieldName) != null;
+    }
+
+    /*
+     * Bind to the real owner of the field, which may not be loaded at
+     * decompiling stage, thus late bind is needed.
+     */
+    public FieldInfo bind() {
+        ClassInfo type = owner;
+        while (true) {
+            ImmutableMap<String, ClassInfo> fields = type.getAllFieldsHere();
+            if (fields != null && fields.containsKey(fieldName))
+                return new FieldInfo(type, fieldName);
+            final ClassInfo baseType = type.getBaseType();
+            if (baseType == null) {
+                Log.warn("field bind failed");
+                return new FieldInfo(type, fieldName);
+            }
+            type = baseType;
+        }
+    }
 }

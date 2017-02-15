@@ -31,11 +31,11 @@ public class ReflectionClassDetailLoader extends ClassDetailLoader {
             c = Class.forName(fullName);
         }
         ClassInfo baseType = scope.findOrCreateClass(c.getSuperclass());
-		/*
-		 * Java spec: When an interface has no direct SuperInterface , it will
-		 * create abstract public method for all those public methods present in
-		 * the Object class
-		 */
+        /*
+         * Java spec: When an interface has no direct SuperInterface , it will
+         * create abstract public method for all those public methods present in
+         * the Object class
+         */
         if (baseType == null && c.isInterface()) {
             baseType = scope.rootObject;
         }

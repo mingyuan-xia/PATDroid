@@ -27,99 +27,99 @@ import java.util.ArrayList;
 import java.util.Stack;
 
 public final class JSONWriter implements Closeable, Flushable {
-	private final Writer writer;
-	private final Stack<String> enders = new Stack<String>();
-	private int indent = 0;
-	private boolean needComma = false;
-	
-	public JSONWriter(Writer writer) {
-		this.writer = writer;
-	}
-	
-	private final String getIndent() {
-		return new String(new char[indent]).replace("\0", "\t");
-	}
-	
-	private final JSONWriter writeItem(String k, String content) throws IOException {
-		if (needComma) writer.write(",\n"); else writer.write("\n");
-		writer.write(getIndent() + "\"" + k + "\": " + content);
-		needComma = true;
-		return this;
-	}
-	
-	private final JSONWriter writeStarter(String starter, String ender, String k) throws IOException {
-		if (needComma) writer.write(",\n"); else writer.write("\n");
-		writer.write(getIndent());
-		writer.write(k != null ? "\"" + k + "\": " : "");
-		writer.write(starter);
-		enders.push(ender);
-		indent++;
-		needComma = false;
-		return this;
-	}
-	
-	public final JSONWriter writeStartObject(String k) throws IOException {
-		return writeStarter("{", "}", k);
-	}
-	
-	public final JSONWriter writeStartObject() throws IOException {
-		return writeStarter("{", "}", null);
-	}
-	
-	public final JSONWriter writeStartArray(String k) throws IOException {
-		return writeStarter("[", "]", k);
-	}
-	
-	public final JSONWriter writeEnd() throws IOException {
-		writer.write("\n");
-		indent--;
-		writer.write(getIndent() + enders.pop());
-		needComma = true;
-		return this;
-	}
-	
-	public final JSONWriter write(String k, String str) throws IOException {
-		return writeItem(k, "\"" + str + "\"");
-	}
-	
-	public final JSONWriter write(String k, int v) throws IOException {
-		return writeItem(k, Integer.toString(v));
-	}
-	
-	public final JSONWriter write(String k, boolean b) throws IOException {
-		return writeItem(k, Boolean.toString(b));
-	}
-	
-	public final JSONWriter writeNull(String k) throws IOException {
-		return writeItem(k, "null");
-	}
-	
-	public final JSONWriter writeObjectAsString(String k, Object o) throws IOException {
-		return (o == null ? writeNull(k) : write(k, o.toString()));
-	}
-	
-	public JSONWriter writeArray(String k, ArrayList<?> list) throws IOException {
-		String s = "";
-		int counter = 0;
-		s += "[";
-		for (Object o : list) {
-			s += "\"" + o.toString() + "\"";
-			if (++counter != list.size()) {
-				s += ", ";
-			}
-		}
-		s += "]";
-		return writeItem(k, s);
-	}
+    private final Writer writer;
+    private final Stack<String> enders = new Stack<String>();
+    private int indent = 0;
+    private boolean needComma = false;
 
-	@Override
-	public void flush() throws IOException {
-		writer.flush();
-	}
+    public JSONWriter(Writer writer) {
+        this.writer = writer;
+    }
 
-	@Override
-	public void close() throws IOException {
-		flush();
-		writer.close();
-	}
+    private final String getIndent() {
+        return new String(new char[indent]).replace("\0", "\t");
+    }
+
+    private final JSONWriter writeItem(String k, String content) throws IOException {
+        if (needComma) writer.write(",\n"); else writer.write("\n");
+        writer.write(getIndent() + "\"" + k + "\": " + content);
+        needComma = true;
+        return this;
+    }
+
+    private final JSONWriter writeStarter(String starter, String ender, String k) throws IOException {
+        if (needComma) writer.write(",\n"); else writer.write("\n");
+        writer.write(getIndent());
+        writer.write(k != null ? "\"" + k + "\": " : "");
+        writer.write(starter);
+        enders.push(ender);
+        indent++;
+        needComma = false;
+        return this;
+    }
+
+    public final JSONWriter writeStartObject(String k) throws IOException {
+        return writeStarter("{", "}", k);
+    }
+
+    public final JSONWriter writeStartObject() throws IOException {
+        return writeStarter("{", "}", null);
+    }
+
+    public final JSONWriter writeStartArray(String k) throws IOException {
+        return writeStarter("[", "]", k);
+    }
+
+    public final JSONWriter writeEnd() throws IOException {
+        writer.write("\n");
+        indent--;
+        writer.write(getIndent() + enders.pop());
+        needComma = true;
+        return this;
+    }
+
+    public final JSONWriter write(String k, String str) throws IOException {
+        return writeItem(k, "\"" + str + "\"");
+    }
+
+    public final JSONWriter write(String k, int v) throws IOException {
+        return writeItem(k, Integer.toString(v));
+    }
+
+    public final JSONWriter write(String k, boolean b) throws IOException {
+        return writeItem(k, Boolean.toString(b));
+    }
+
+    public final JSONWriter writeNull(String k) throws IOException {
+        return writeItem(k, "null");
+    }
+
+    public final JSONWriter writeObjectAsString(String k, Object o) throws IOException {
+        return (o == null ? writeNull(k) : write(k, o.toString()));
+    }
+
+    public JSONWriter writeArray(String k, ArrayList<?> list) throws IOException {
+        String s = "";
+        int counter = 0;
+        s += "[";
+        for (Object o : list) {
+            s += "\"" + o.toString() + "\"";
+            if (++counter != list.size()) {
+                s += ", ";
+            }
+        }
+        s += "]";
+        return writeItem(k, s);
+    }
+
+    @Override
+    public void flush() throws IOException {
+        writer.flush();
+    }
+
+    @Override
+    public void close() throws IOException {
+        flush();
+        writer.close();
+    }
 }

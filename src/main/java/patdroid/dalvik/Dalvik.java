@@ -78,20 +78,20 @@ public class Dalvik {
                 return "V";
             else
                 return "L" + canonicalName.replace('.', '/') + ";";
-			/* only on Java7
-			switch (canonicalName) {
-			case "char": return "C";
-			case "int": return "I";
-			case "byte": return "B";
-			case "boolean": return "Z";
-			case "float": return "F";
-			case "double": return "D";
-			case "short": return "S";
-			case "long": return "J";
-			case "void": return "V";
-			default: return "L" + canonicalName.replace('.', '/') + ";";
-			}
-			*/
+            /* only on Java7
+            switch (canonicalName) {
+            case "char": return "C";
+            case "int": return "I";
+            case "byte": return "B";
+            case "boolean": return "Z";
+            case "float": return "F";
+            case "double": return "D";
+            case "short": return "S";
+            case "long": return "J";
+            case "void": return "V";
+            default: return "L" + canonicalName.replace('.', '/') + ";";
+            }
+            */
         }
     }
 

@@ -20,30 +20,30 @@
 package patdroid.util;
 
 public final class Pair<T1, T2> {
-	final public T1 first;
-	final public T2 second;
-	
-	public Pair(T1 first, T2 second) {
-		this.first = first;
-		this.second = second;
-	}
-	
-	@Override
-	final public boolean equals(Object o) {
-		if (o instanceof Pair) {
-			Pair<?, ?> u = (Pair<?, ?>)o;
-			return first.equals(u.first) && second.equals(u.second);
-		}
-		return false;
-	}
-	
-	@Override
-	final public int hashCode() {
-		return 997 * first.hashCode() ^ 991 * second.hashCode();
-	}
-	
-	@Override
-	final public String toString() {
-		return ("(" + first.toString() + ", " + second.toString() + ")");
-	}
+    final public T1 first;
+    final public T2 second;
+
+    public Pair(T1 first, T2 second) {
+        this.first = first;
+        this.second = second;
+    }
+
+    @Override
+    final public boolean equals(Object o) {
+        if (o instanceof Pair) {
+            Pair<?, ?> u = (Pair<?, ?>)o;
+            return first.equals(u.first) && second.equals(u.second);
+        }
+        return false;
+    }
+
+    @Override
+    final public int hashCode() {
+        return 997 * first.hashCode() ^ 991 * second.hashCode();
+    }
+
+    @Override
+    final public String toString() {
+        return ("(" + first.toString() + ", " + second.toString() + ")");
+    }
 }

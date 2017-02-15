@@ -197,11 +197,11 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
     public static int translateAccessFlags(int accessFlags) {
         int f = 0;
         f |= (AccessFlags.ABSTRACT.isSet(accessFlags) ? Modifier.ABSTRACT : 0);
-//		f |= (AccessFlags.ANNOTATION.isSet(accessFlags) ? Modifier.ANNOTATION : 0);
-//		f |= (AccessFlags.BRIDGE.isSet(accessFlags) ? Modifier.BRIDGE : 0);
-//		f |= (AccessFlags.CONSTRUCTOR.isSet(accessFlags) ? Modifier.CONSTRUCTOR : 0);
-//		f |= (AccessFlags.DECLARED_SYNCHRONIZED.isSet(accessFlags) ? Modifier.DECLARED_SYNCHRONIZED : 0);
-//		f |= (AccessFlags.ENUM.isSet(accessFlags) ? Modifier.ENUM : 0);
+//        f |= (AccessFlags.ANNOTATION.isSet(accessFlags) ? Modifier.ANNOTATION : 0);
+//        f |= (AccessFlags.BRIDGE.isSet(accessFlags) ? Modifier.BRIDGE : 0);
+//        f |= (AccessFlags.CONSTRUCTOR.isSet(accessFlags) ? Modifier.CONSTRUCTOR : 0);
+//        f |= (AccessFlags.DECLARED_SYNCHRONIZED.isSet(accessFlags) ? Modifier.DECLARED_SYNCHRONIZED : 0);
+//        f |= (AccessFlags.ENUM.isSet(accessFlags) ? Modifier.ENUM : 0);
         f |= (AccessFlags.FINAL.isSet(accessFlags) ? Modifier.FINAL : 0);
         f |= (AccessFlags.INTERFACE.isSet(accessFlags) ? Modifier.INTERFACE : 0);
         f |= (AccessFlags.NATIVE.isSet(accessFlags) ? Modifier.NATIVE : 0);
@@ -211,9 +211,9 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         f |= (AccessFlags.STATIC.isSet(accessFlags) ? Modifier.STATIC : 0);
         f |= (AccessFlags.STRICTFP.isSet(accessFlags) ? Modifier.STRICT : 0);
         f |= (AccessFlags.SYNCHRONIZED.isSet(accessFlags) ? Modifier.SYNCHRONIZED : 0);
-//		f |= (AccessFlags.SYNTHETIC.isSet(accessFlags) ? Modifier.SYNTHETIC : 0);
+//        f |= (AccessFlags.SYNTHETIC.isSet(accessFlags) ? Modifier.SYNTHETIC : 0);
         f |= (AccessFlags.TRANSIENT.isSet(accessFlags) ? Modifier.TRANSIENT : 0);
-//		f |= (AccessFlags.VARARGS.isSet(accessFlags) ? Modifier.VARARGS : 0);
+//        f |= (AccessFlags.VARARGS.isSet(accessFlags) ? Modifier.VARARGS : 0);
         f |= (AccessFlags.VOLATILE.isSet(accessFlags) ? Modifier.VOLATILE : 0);
         return f;
     }

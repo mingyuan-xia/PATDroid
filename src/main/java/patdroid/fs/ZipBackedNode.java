@@ -25,27 +25,27 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public final class ZipBackedNode extends FileNode {
-	private final ZipFile zip;
-	private final String prefix;
-	
-	public ZipBackedNode(ZipFile zip) {
-		this(zip, "");
-	}
-	
-	public ZipBackedNode(ZipFile zip, String prefix) {
-		this.zip = zip;
-		this.prefix = prefix;
-	}
-	
-	@Override
-	protected InputStream openReadHere(String path) {
-		ZipEntry entry = zip.getEntry(prefix + path.substring(1));
-		if (entry == null)
-			return null;
-		try {
-			return zip.getInputStream(entry);
-		} catch (IOException e) {
-			return null;
-		}
-	}
+    private final ZipFile zip;
+    private final String prefix;
+
+    public ZipBackedNode(ZipFile zip) {
+        this(zip, "");
+    }
+
+    public ZipBackedNode(ZipFile zip, String prefix) {
+        this.zip = zip;
+        this.prefix = prefix;
+    }
+
+    @Override
+    protected InputStream openReadHere(String path) {
+        ZipEntry entry = zip.getEntry(prefix + path.substring(1));
+        if (entry == null)
+            return null;
+        try {
+            return zip.getInputStream(entry);
+        } catch (IOException e) {
+            return null;
+        }
+    }
 }
