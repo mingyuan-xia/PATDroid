@@ -95,7 +95,7 @@ public final class ClassDetail {
 				Log.warnwarn("failed to find field: "+ fieldName);
 				return null;
 			}
-			return baseType.getDetails().getFieldType(fieldName);
+			return baseType.mutableDetail.getFieldType(fieldName);
 		}
 	}
 	
@@ -113,7 +113,7 @@ public final class ClassDetail {
 				Log.warnwarn("failed to find static field: "+ fieldName);
 				return null;
 			}
-			return baseType.getDetails().getStaticFieldType(fieldName);
+			return baseType.mutableDetail.getStaticFieldType(fieldName);
 		}
 	}
 	
@@ -133,9 +133,9 @@ public final class ClassDetail {
 				return mi;
 			}
 			if (detail.baseType != null)
-				q.push(detail.baseType.getDetails());
+				q.push(detail.baseType.mutableDetail);
 			for (ClassInfo i : detail.interfaces)
-				q.push(i.getDetails());
+				q.push(i.mutableDetail);
 		}
 		return null;
 	}	
@@ -168,9 +168,9 @@ public final class ClassDetail {
 			}
 			
 			if (detail.baseType != null)
-				q.push(detail.baseType.getDetails());
+				q.push(detail.baseType.mutableDetail);
 			for (ClassInfo i : detail.interfaces)
-				q.push(i.getDetails());
+				q.push(i.mutableDetail);
 		}
 		return result.toArray(new MethodInfo[result.size()]);
 	}
@@ -198,7 +198,7 @@ public final class ClassDetail {
 	 * @return if this class can be converted to the other.
 	 */
 	public final boolean isConvertibleTo(ClassInfo type) {
-		ClassDetail that = type.getDetails();
+		ClassDetail that = type.mutableDetail;
 		if (this == that) {
 			return true;
 		}
@@ -225,18 +225,18 @@ public final class ClassDetail {
 	public final void updateDerivedClasses(ClassInfo ci) {
 		ArrayDeque<ClassDetail> a = new ArrayDeque<ClassDetail>();
 		if (baseType != null)
-			a.add(baseType.getDetails());
+			a.add(baseType.mutableDetail);
 		for (ClassInfo i : interfaces) {
-			a.add(i.getDetails());
+			a.add(i.mutableDetail);
 		}
 		while (!a.isEmpty()) {
 			ClassDetail detail = a.pop();
 			detail.derivedClasses.add(ci);
 			detail.derivedClasses.addAll(derivedClasses);
 			if (detail.baseType != null)
-				a.add(detail.baseType.getDetails());
+				a.add(detail.baseType.mutableDetail);
 			for (ClassInfo i : detail.interfaces) {
-				a.add(i.getDetails());
+				a.add(i.mutableDetail);
 			}
 		}
 	}
@@ -244,18 +244,18 @@ public final class ClassDetail {
 	public final void removeDerivedClasses(ClassInfo ci) {
 		ArrayDeque<ClassDetail> a = new ArrayDeque<ClassDetail>();
 		if (baseType != null)
-			a.add(baseType.getDetails());
+			a.add(baseType.mutableDetail);
 		for (ClassInfo i : interfaces) {
-			a.add(i.getDetails());
+			a.add(i.mutableDetail);
 		}
 		while (!a.isEmpty()) {
 			ClassDetail detail = a.pop();
 			detail.derivedClasses.remove(ci);
 			detail.derivedClasses.removeAll(derivedClasses);
 			if (detail.baseType != null)
-				a.add(detail.baseType.getDetails());
+				a.add(detail.baseType.mutableDetail);
 			for (ClassInfo i : detail.interfaces) {
-				a.add(i.getDetails());
+				a.add(i.mutableDetail);
 			}
 		}
 	}

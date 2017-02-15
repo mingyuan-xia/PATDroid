@@ -38,25 +38,21 @@ import patdroid.util.Log;
  * ClassInfos are obtained by find-series functions not created by constructors.
  */
 public final class ClassInfo {
-    private static final ClassDetail missingDetail = ClassDetail.create(
+    private static final ClassDetail MISSING_DETAIL = ClassDetail.create(
             null, ImmutableList.<ClassInfo>of(), 0, ImmutableList.<MethodInfo>of(),
             ImmutableMap.<String, ClassInfo>of(), ImmutableMap.<String, ClassInfo>of(), true);
-
-	public static ClassDetailLoader rootDetailLoader = new ClassDetailLoader();
+    private static final MethodSignature STATIC_INITIALIZER = MethodSignature.of(MethodInfo.STATIC_INITIALIZER);
+    private final MethodSignature DEFAULT_CONSTRUCTOR = MethodSignature.of(MethodInfo.CONSTRUCTOR, this);
 
 	public final Scope scope;
-	/**
-	 * The Java canonical class name
-	 */
 	public final String fullName;
-
-	ClassDetail details;
+	public ClassDetail mutableDetail = MISSING_DETAIL;
 
 	/**
-	 * Low-level constructor
+	 * @param scope
 	 * @param fullName the full name of the class
 	 */
-	ClassInfo(Scope scope, String fullName) {
+	public ClassInfo(Scope scope, String fullName) {
 		this.scope = scope;
 		this.fullName = fullName;
 	}
@@ -68,7 +64,7 @@ public final class ClassInfo {
 	 * @return if the class is a framework class
 	 */
 	public boolean isFrameworkClass() {
-		return getDetails().isFrameworkClass;
+		return MISSING_DETAIL.isFrameworkClass;
 	}
 
 	/**
@@ -77,7 +73,7 @@ public final class ClassInfo {
 	 * @return if this class is missing
 	 */
 	public boolean isMissing() {
-		return getDetails() == missingDetail;
+		return mutableDetail == MISSING_DETAIL;
 	}
 	
 	/**
@@ -88,7 +84,7 @@ public final class ClassInfo {
 	 * @return the type, or null if not found or the class is missing
 	 */
 	public ClassInfo getFieldType(String fieldName) {
-		return getDetails().getFieldType(fieldName);
+		return mutableDetail.getFieldType(fieldName);
 	}
 	
 	/**
@@ -99,7 +95,7 @@ public final class ClassInfo {
 	 * @return the type of the static field, or null if not found or the class is missing
 	 */
 	public ClassInfo getStaticFieldType(String fieldName) {
-		return getDetails().getStaticFieldType(fieldName);
+		return mutableDetail.getStaticFieldType(fieldName);
 	}
 
 	/**
@@ -109,7 +105,7 @@ public final class ClassInfo {
 	 * @return a key-value store mapping field name to their types 
 	 */
 	public ImmutableMap<String, ClassInfo> getAllFieldsHere() {
-		return getDetails().fields;
+		return mutableDetail.fields;
 	}
 	
 	/**
@@ -119,7 +115,7 @@ public final class ClassInfo {
 	 * @return a key-value store mapping static field name to their types 
 	 */
 	public ImmutableMap<String, ClassInfo> getAllStaticFieldsHere() {
-		return getDetails().staticFields;
+		return mutableDetail.staticFields;
 	}
 
 	/**
@@ -127,7 +123,7 @@ public final class ClassInfo {
 	 * @return all methods in the class
      */
 	public ImmutableCollection<MethodInfo> getAllMethods() {
-		return getDetails().methods.values();
+		return mutableDetail.methods.values();
 	}
 
 	/**
@@ -138,7 +134,7 @@ public final class ClassInfo {
 	 * @return the method in this class, or null if not found or the class is missing
 	 */
 	public MethodInfo findMethodHere(MethodSignature signature) {
-		return getDetails().methods.get(signature);
+		return mutableDetail.methods.get(signature);
 	}
 	
 	/**
@@ -150,7 +146,7 @@ public final class ClassInfo {
 	 * An empty array will be returned in case of not finding any method
 	 */
 	public MethodInfo[] findMethodsHere(String name) {
-		return getDetails().findMethodsHere(name);
+		return mutableDetail.findMethodsHere(name);
 	}
 	
 	/**
@@ -162,7 +158,7 @@ public final class ClassInfo {
 	 * An empty array will be returned in case of not finding any method
 	 */
 	public MethodInfo[] findMethods(String name) {
-		return getDetails().findMethods(name);
+		return mutableDetail.findMethods(name);
 	}
 
 	/**
@@ -173,7 +169,7 @@ public final class ClassInfo {
 	 * @return  the method representation, or null if not found or the class is missing
 	 */
 	public MethodInfo findMethod(MethodSignature signature) {
-		return getDetails().findMethod(signature);
+		return mutableDetail.findMethod(signature);
 	}
 
 	/**
@@ -188,7 +184,7 @@ public final class ClassInfo {
 		if (type.isPrimitive()) {
 			return (type == scope.primitiveVoid || isPrimitive());
 		} else {
-			return getDetails().isConvertibleTo(type);
+			return mutableDetail.isConvertibleTo(type);
 		}
 	}
 
@@ -235,14 +231,14 @@ public final class ClassInfo {
 	 * @return the base type, or null if this class is java.lang.Object
 	 */
 	public ClassInfo getBaseType() {
-		return getDetails().baseType;
+		return mutableDetail.baseType;
 	}
 
 	/**
 	 * Get the interfaces that the current class implements
 	 * @return interfaces
 	 */
-	public ImmutableList<ClassInfo> getInterfaces() { return getDetails().interfaces; }
+	public ImmutableList<ClassInfo> getInterfaces() { return mutableDetail.interfaces; }
 
 	/**
 	 * Change the super class of this class to a new super class, the
@@ -250,10 +246,10 @@ public final class ClassInfo {
 	 * @param baseType new super class for this class
 	 */
 	public void setBaseType(ClassInfo baseType) {
-		ClassDetail origDetails = getDetails();
+		ClassDetail origDetails = mutableDetail;
 		origDetails.removeDerivedClasses(this);
-		details = origDetails.changeBaseType(baseType);
-		details.updateDerivedClasses(this);
+        mutableDetail = origDetails.changeBaseType(baseType);
+        mutableDetail.updateDerivedClasses(this);
 	}
 
 	/**
@@ -282,18 +278,18 @@ public final class ClassInfo {
 	 * @return if the class is final
 	 */
 	public boolean isFinal() {
-		return Modifier.isFinal(getDetails().accessFlags);
+		return Modifier.isFinal(mutableDetail.accessFlags);
 	}
 
 	/**
 	 * @return if the class is an interface
 	 */
 	public boolean isInterface() {
-		return Modifier.isInterface(getDetails().accessFlags);
+		return Modifier.isInterface(mutableDetail.accessFlags);
 	}
 
 	public boolean isAbstract() {
-		return Modifier.isAbstract(getDetails().accessFlags);
+		return Modifier.isAbstract(mutableDetail.accessFlags);
 	}
 	
 	/**
@@ -303,7 +299,7 @@ public final class ClassInfo {
 	 * @return the default constructor, or null if not found
 	 */
 	public MethodInfo getDefaultConstructor() {
-		return findMethodHere(MethodSignature.of(MethodInfo.CONSTRUCTOR, this));
+		return findMethodHere(DEFAULT_CONSTRUCTOR);
 	}
 	
 	/**
@@ -313,7 +309,7 @@ public final class ClassInfo {
 	 * @return the static initializer or null if not found
 	 */
 	public MethodInfo getStaticInitializer() {
-		return findMethod(MethodSignature.of(MethodInfo.STATIC_INITIALIZER));
+		return findMethod(STATIC_INITIALIZER);
 	}
 
 	/**
@@ -331,35 +327,10 @@ public final class ClassInfo {
 	}
 
 	/**
-	 * Get the details of the class. As class loading is on-demand, this may trigger
-	 * a class loading based on reflection
-	 * <p>
-	 * <b>Note:</b> this might start class loading if the class is not loaded yet
-	 * @return the class detailed info
-	 */
-	public ClassDetail getDetails() {
-		if (details == null) {
-			try {
-				rootDetailLoader.load(this);
-				return details;
-			} catch (ClassNotFoundException e) {
-				Log.debug("Cannot find framework class: " + fullName);
-			} catch (ExceptionInInitializerError e) {
-				Log.warn("Framework class not visible: " + fullName);
-			} catch (NoClassDefFoundError e) {
-				Log.warn("Cannot find framework class def: " + fullName);
-			}
-			this.details = missingDetail;
-		}
-		return details;
-	}
-
-	/**
 	 * An almost final class has no derived classes in the current class tree
 	 * @return if a class is "almost final"
 	 */
 	public boolean isAlmostFinal() {
-		return (getDetails().derivedClasses.size() == 0);
+		return mutableDetail.derivedClasses.isEmpty();
 	}
-
 }

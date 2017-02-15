@@ -40,11 +40,11 @@ public class ClassDetailLoader {
      * <p>
      * <b>Note:</b> this might start class loading if the class is not loaded yet
      * @param type the owner type
-     * @param details the detailed info about the class
+     * @param detail the detailed info about the class
      */
-    protected static void setDetails(ClassInfo type, ClassDetail details) {
-        Log.warnwarn(type.details == null, "class is already loaded" + type);
-        type.details = details;
-        details.updateDerivedClasses(type);
+    protected static void setDetail(ClassInfo type, ClassDetail detail) {
+        Log.warnwarn(type.mutableDetail == null, "class is already loaded" + type);
+        type.mutableDetail = detail;
+        detail.updateDerivedClasses(type);
     }
 }

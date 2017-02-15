@@ -104,7 +104,7 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
             for (final ClassDef classDef : dexFile.getClasses()) {
                 if (Dalvik.toCanonicalName(classDef.getType()).equals(ci.fullName)) {
                     ClassDetail detail = translateClassDef(ci, classDef);
-                    setDetails(ci, detail);
+                    setDetail(ci, detail);
                     if (translateInstructions) {
                         resolver.resolveAll();
                     }
@@ -122,7 +122,7 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
             for (final ClassDef classDef : dexFile.getClasses()) {
                 ClassInfo ci = Dalvik.findOrCreateClass(scope, classDef.getType());
                 ClassDetail detail = translateClassDef(ci, classDef);
-                setDetails(ci, detail);
+                setDetail(ci, detail);
             }
         }
         if (translateInstructions) {

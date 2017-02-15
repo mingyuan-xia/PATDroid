@@ -85,7 +85,7 @@ public class ReflectionClassDetailLoader extends ClassDetailLoader {
         ImmutableList<ClassInfo> interfaces = scope.findOrCreateClasses(c.getInterfaces());
 
         // loaded as a framework class
-        setDetails(type, ClassDetail.create(baseType, interfaces, c.getModifiers(),
-                                            methods, fields, staticFields, true));
+        setDetail(type, ClassDetail.create(baseType, interfaces, c.getModifiers(),
+                                           methods, fields, staticFields, true));
     }
 }

@@ -20,8 +20,6 @@
 
 package patdroid.core;
 
-import java.util.HashMap;
-
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 import patdroid.util.Log;
