@@ -61,7 +61,7 @@ import patdroid.util.Pair;
  * implemented in the future.
  */
 @SuppressWarnings("incomplete-switch")
-public final class MethodImplementationTranslator {
+final class MethodImplementationTranslator {
     private final Scope scope;
     private final InvocationResolver resolver;
     private MethodInfo mi;
@@ -1165,7 +1165,7 @@ public final class MethodImplementationTranslator {
         }
         final MethodReference mr = (MethodReference) i5.getReference();
         final int[] args = rebuildArgs(mr, getArguments(i5), isStatic);
-        i.extra = new Object[] {scope, mr, isStatic, args};
+        i.extra = new Object[] {mr, args};
         resolver.registerForResolve(this.mi, currentCodeIndex);
         return i;
     }
@@ -1194,7 +1194,7 @@ public final class MethodImplementationTranslator {
         }
         final MethodReference mr = (MethodReference) ir.getReference();
         final int[] args = rebuildArgs(mr, getArguments(ir), isStatic);
-        i.extra = new Object[] {scope, mr, isStatic, args};
+        i.extra = new Object[] {mr, args};
         resolver.registerForResolve(this.mi, currentCodeIndex);
         return i;
     }
@@ -1213,7 +1213,7 @@ public final class MethodImplementationTranslator {
         } else if (opcode == Opcode.PACKED_SWITCH_PAYLOAD ||
                 opcode == Opcode.SPARSE_SWITCH_PAYLOAD) {
             Log.doAssert(i.opcode == Instruction.OP_SWITCH, "payload type mismatch");
-            final int switchAddress = ((Integer) i.extra).intValue();
+            final int switchAddress = (Integer) i.extra;
             final List<? extends SwitchElement> table = ((SwitchPayload) p).getSwitchElements();
             boolean resolvable = true;
             int maxAddress = -1;

@@ -10,9 +10,9 @@ import java.util.List;
 /**
  * A scope is a container of classes. A scope can be used to represent different entities, which
  * entirely depends on the upper layer program analysis task.
- * Just to like a few things that a scope can stand for:
+ * Just to list a few things that a scope can stand for:
  * An APK file (as a whole), a Dex file (consider multi-dex), android framework classes (framework.jar)
- * Java core library classes (java.*), app code (e.g. with a specific package name).
+ * Java core library classes (java.*), 3rd party library code (e.g. with a specific package name).
  * <p>
  * Overall it is suggested multiple scopes stay disjoint.
  */

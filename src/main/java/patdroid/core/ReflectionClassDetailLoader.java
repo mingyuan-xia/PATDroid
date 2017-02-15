@@ -13,6 +13,7 @@ import java.util.HashMap;
  * The detail of the class is available in the current Java environment.
  * Load that with standard Java reflection
  */
+@Deprecated
 public class ReflectionClassDetailLoader extends ClassDetailLoader {
     private final Scope scope;
 

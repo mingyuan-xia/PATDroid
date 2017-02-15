@@ -36,19 +36,18 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
     private final DexFile[] dexFiles;
     private final boolean translateInstructions;
     private final boolean isFramework;
-    private final InvocationResolver resolver;
 
     private SmaliClassDetailLoader(DexFile[] dexFiles, boolean translateInstructions, boolean isFramework) {
         this.dexFiles = dexFiles;
         this.translateInstructions = translateInstructions;
         this.isFramework = isFramework;
-        this.resolver = translateInstructions ? new InvocationResolver() : null;
     }
 
     /**
      * Create a loader that loads from an APK file (could contain multiple DEX files), optionally loading instructions
      * @param apkFile the APK file
      * @param translateInstructions true if the instructions shall be loaded
+     * @return A smali class detail loader to load classes from the containing DEX files
      */
     public static SmaliClassDetailLoader fromApkFile(ZipFile apkFile, boolean translateInstructions) {
         ArrayList<ZipEntry> dexEntries = new ArrayList<ZipEntry>();
@@ -80,47 +79,28 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         return new SmaliClassDetailLoader(dexFiles, translateInstructions, false);
     }
 
-    public static SmaliClassDetailLoader fromFramework(int apiLevel) {
+    public static SmaliClassDetailLoader fromFramework(int apiLevel) throws RuntimeException {
         File f = new File(Settings.frameworkClassesFolder, "android-" + apiLevel + ".dex");
         if (!f.exists())
-            return null;
+            throw new RuntimeException("framework file not available");
         DexFile dex = null;
         try {
             dex = DexFileFactory.loadDexFile(f, apiLevel);
         } catch (IOException e) {
-            Log.err("failed to load framework classes");
-            Log.err(e);
-            return null;
+            throw new RuntimeException("failed to load framework classes");
         }
         return new SmaliClassDetailLoader(new DexFile[] {dex}, false, true);
-    }
-
-    @Override
-    public void load(ClassInfo ci) throws ClassNotFoundException,
-            ExceptionInInitializerError, NoClassDefFoundError
-    {
-        for (DexFile dexFile: dexFiles) {
-            for (final ClassDef classDef : dexFile.getClasses()) {
-                if (Dalvik.toCanonicalName(classDef.getType()).equals(ci.fullName)) {
-                    ClassDetail detail = translateClassDef(ci, classDef);
-                    setDetail(ci, detail);
-                    if (translateInstructions) {
-                        resolver.resolveAll();
-                    }
-                }
-            }
-        }
-        throw new ClassNotFoundException("" + ci.fullName + " not found in the dex file");
     }
 
     /**
      * Parse an apk file and extract all classes, methods, fields and optionally instructions
      */
     public void loadAll(Scope scope) {
+        InvocationResolver resolver = (translateInstructions ? new InvocationResolver(scope) : null);
         for (DexFile dexFile: dexFiles) {
             for (final ClassDef classDef : dexFile.getClasses()) {
                 ClassInfo ci = Dalvik.findOrCreateClass(scope, classDef.getType());
-                ClassDetail detail = translateClassDef(ci, classDef);
+                ClassDetail detail = translateClassDef(ci, classDef, resolver);
                 setDetail(ci, detail);
             }
         }
@@ -129,8 +109,7 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         }
     }
 
-    private ClassDetail translateClassDef(
-            ClassInfo ci, ClassDef classDef) {
+    private ClassDetail translateClassDef(ClassInfo ci, ClassDef classDef, InvocationResolver resolver) {
         ClassInfo baseType;
         if (classDef.getSuperclass() == null) {
             baseType = null; // for java.lang.Object
@@ -139,7 +118,7 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         }
         final ImmutableList<ClassInfo> interfaces = findOrCreateClasses(ci.scope, classDef.getInterfaces());
         final int accessFlags = translateAccessFlags(classDef.getAccessFlags());
-        final ImmutableList<MethodInfo> methods = translateMethods(ci, classDef.getMethods());
+        final ImmutableList<MethodInfo> methods = translateMethods(ci, classDef.getMethods(), resolver);
         final HashMap<String, ClassInfo> fields = translateFields(
                 ci.scope, classDef.getInstanceFields());
         // TODO: do we need this?
@@ -151,7 +130,7 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         return ClassDetail.create(baseType, interfaces, accessFlags, methods, fields, staticFields, isFramework);
     }
 
-    private MethodInfo translateMethod(ClassInfo ci, Method method) {
+    private MethodInfo translateMethod(ClassInfo ci, Method method, InvocationResolver resolver) {
         final ClassInfo retType = Dalvik.findOrCreateClass(ci.scope, method.getReturnType());
         final ImmutableList<ClassInfo> paramTypes = findOrCreateClasses(ci.scope, method.getParameterTypes());
         final MethodSignature signature = new MethodSignature(method.getName(), paramTypes);
@@ -171,14 +150,15 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         return mi;
     }
 
-    private ImmutableList<MethodInfo> translateMethods(ClassInfo ci, Iterable<? extends Method> methods) {
+    private ImmutableList<MethodInfo> translateMethods(ClassInfo ci, Iterable<? extends Method> methods
+            , InvocationResolver resolver) {
         ImmutableList.Builder<MethodInfo> builder = ImmutableList.builder();
         for (Method method : methods) {
             // TODO(iceboy): Put synthetic into MethodSignature, as they have the same name as non-synthetic methods.
             if (AccessFlags.SYNTHETIC.isSet(method.getAccessFlags())) {
                 continue;
             }
-            builder.add(translateMethod(ci, method));
+            builder.add(translateMethod(ci, method, resolver));
         }
         return builder.build();
     }
@@ -193,7 +173,7 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         return result;
     }
 
-    public static int translateAccessFlags(int accessFlags) {
+    private static int translateAccessFlags(int accessFlags) {
         int f = 0;
         f |= (AccessFlags.ABSTRACT.isSet(accessFlags) ? Modifier.ABSTRACT : 0);
 //        f |= (AccessFlags.ANNOTATION.isSet(accessFlags) ? Modifier.ANNOTATION : 0);
@@ -217,15 +197,7 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         return f;
     }
 
-    public static MethodInfo translateMethodReference(Scope scope, MethodReference method, boolean isStatic) {
-        int accessFlags = isStatic ? Modifier.STATIC : 0;
-        ClassInfo ci = Dalvik.findOrCreateClass(scope, method.getDefiningClass());
-        ClassInfo retType = Dalvik.findOrCreateClass(scope, method.getReturnType());
-        ImmutableList<ClassInfo> paramTypes = findOrCreateClasses(scope, method.getParameterTypes());
-        return new MethodInfo(ci, new MethodSignature(method.getName(), paramTypes), retType, accessFlags);
-    }
-
-    private static ImmutableList<ClassInfo> findOrCreateClasses(Scope scope, List<? extends CharSequence> l) {
+    static ImmutableList<ClassInfo> findOrCreateClasses(Scope scope, List<? extends CharSequence> l) {
         ImmutableList.Builder<ClassInfo> builder = ImmutableList.builder();
         for (CharSequence s : l) {
             builder.add(Dalvik.findOrCreateClass(scope, s.toString()));

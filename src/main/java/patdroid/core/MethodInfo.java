@@ -92,6 +92,7 @@ public final class MethodInfo {
      * @param accessFlags access flags, zero if none
      * @return the method prototype
      */
+    @Deprecated
     public static MethodInfo makePrototype(MethodSignature signature, ClassInfo returnType, int accessFlags) {
         return new MethodInfo(null, signature, returnType, accessFlags);
     }

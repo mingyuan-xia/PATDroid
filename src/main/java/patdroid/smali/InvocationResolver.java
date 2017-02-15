@@ -25,43 +25,56 @@ import patdroid.core.ClassInfo;
 import patdroid.core.MethodInfo;
 import patdroid.core.MethodSignature;
 import patdroid.core.Scope;
+import patdroid.dalvik.Dalvik;
 import patdroid.dalvik.Instruction;
-import patdroid.smali.SmaliClassDetailLoader;
 import patdroid.util.Log;
 import patdroid.util.Pair;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 
-public class InvocationResolver {
-    public final ArrayList<Pair<MethodInfo, Integer>> a = new ArrayList<Pair<MethodInfo, Integer>>();
+class InvocationResolver {
+    private final ArrayList<Pair<MethodInfo, Integer>> a = new ArrayList<Pair<MethodInfo, Integer>>();
+    private final Scope scope;
+
+    InvocationResolver(Scope scope) {
+        this.scope = scope;
+    }
+
+    private MethodInfo translateMethodReference(MethodReference method, boolean isStatic) {
+        int accessFlags = isStatic ? Modifier.STATIC : 0;
+        ClassInfo ci = Dalvik.findOrCreateClass(scope, method.getDefiningClass());
+        ClassInfo retType = Dalvik.findOrCreateClass(scope, method.getReturnType());
+        ImmutableList<ClassInfo> paramTypes = SmaliClassDetailLoader.findOrCreateClasses(scope, method.getParameterTypes());
+        return new MethodInfo(ci, new MethodSignature(method.getName(), paramTypes), retType, accessFlags);
+    }
 
     /**
      * Register an invocation instruction to be resolved
      * @param mi the method
      * @param pos the position of the invocation instruction in the instruction stream of the method
      */
-    public void registerForResolve(MethodInfo mi, int pos) {
+    void registerForResolve(MethodInfo mi, int pos) {
         a.add(new Pair<MethodInfo, Integer>(mi, pos));
     }
 
     /**
      * resolve all invocation instructions
      */
-    public void resolveAll() {
+    void resolveAll() {
         for (Pair<MethodInfo, Integer> p : a) {
-            final int insn_idx = p.second.intValue();
+            final int insn_idx = p.second;
             final Instruction i = p.first.insns[insn_idx];
             final Object[] params = (Object[]) i.extra;
-            final Scope scope = (Scope) params[0];
-            final MethodReference mr = (MethodReference) params[1];
-            final boolean isStatic = (Boolean) params[2];
-            final int[] args = (int[]) params[3];
-            final MethodInfo realMethod = SmaliClassDetailLoader.translateMethodReference(scope, mr, isStatic);
-            if (params[0] == null) {
+            final MethodReference mr = (MethodReference) params[0];
+            final boolean isStatic = i.opcode_aux == Instruction.OP_INVOKE_STATIC;
+            final int[] args = (int[]) params[1];
+            final MethodInfo realMethod = translateMethodReference(mr, isStatic);
+            if (realMethod == null) {
                 Log.debug("Cannot resolve method invocation, replace with HALT: " + mr);
                 i.opcode = Instruction.OP_HALT;
             } else {
-                i.extra = new Object[]{realMethod, args};
+                params[0] = realMethod;
             }
         }
         a.clear();
