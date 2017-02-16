@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -96,20 +97,26 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
      * Parse an apk file and extract all classes, methods, fields and optionally instructions
      */
     public void loadAll(Scope scope) {
-        InvocationResolver resolver = (translateInstructions ? new InvocationResolver(scope) : null);
+        IdentityHashMap<MethodInfo, MethodImplementation> collector = new IdentityHashMap<MethodInfo, MethodImplementation>();
         for (DexFile dexFile: dexFiles) {
             for (final ClassDef classDef : dexFile.getClasses()) {
                 ClassInfo ci = Dalvik.findOrCreateClass(scope, classDef.getType());
-                ClassDetail detail = translateClassDef(ci, classDef, resolver);
+                ClassDetail detail = translateClassDef(ci, classDef, collector);
                 setDetail(ci, detail);
             }
         }
         if (translateInstructions) {
-            resolver.resolveAll();
+            for (MethodInfo mi: collector.keySet()) {
+                final MethodImplementation impl = collector.get(mi);
+                // Decode instructions
+                if (impl != null) {
+                    new MethodImplementationTranslator(scope).translate(mi, impl);
+                }
+            }
         }
     }
 
-    private ClassDetail translateClassDef(ClassInfo ci, ClassDef classDef, InvocationResolver resolver) {
+    private ClassDetail translateClassDef(ClassInfo ci, ClassDef classDef, IdentityHashMap<MethodInfo, MethodImplementation> collector) {
         ClassInfo baseType;
         if (classDef.getSuperclass() == null) {
             baseType = null; // for java.lang.Object
@@ -118,7 +125,7 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         }
         final ImmutableList<ClassInfo> interfaces = findOrCreateClasses(ci.scope, classDef.getInterfaces());
         final int accessFlags = translateAccessFlags(classDef.getAccessFlags());
-        final ImmutableList<MethodInfo> methods = translateMethods(ci, classDef.getMethods(), resolver);
+        final ImmutableList<MethodInfo> methods = translateMethods(ci, classDef.getMethods(), collector);
         final HashMap<String, ClassInfo> fields = translateFields(
                 ci.scope, classDef.getInstanceFields());
         // TODO: do we need this?
@@ -130,31 +137,22 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         return ClassDetail.create(baseType, interfaces, accessFlags, methods, fields, staticFields, isFramework);
     }
 
-    private MethodInfo translateMethod(ClassInfo ci, Method method, InvocationResolver resolver) {
+    private MethodInfo translateMethod(ClassInfo ci, Method method, IdentityHashMap<MethodInfo, MethodImplementation> collector) {
         final ClassInfo retType = Dalvik.findOrCreateClass(ci.scope, method.getReturnType());
         final ImmutableList<ClassInfo> paramTypes = findOrCreateClasses(ci.scope, method.getParameterTypes());
         final MethodSignature signature = new MethodSignature(method.getName(), paramTypes);
         final int accessFlags = translateAccessFlags(method.getAccessFlags());
         final MethodInfo mi = new MethodInfo(ci, signature, retType, accessFlags, AccessFlags.SYNTHETIC.isSet(method.getAccessFlags()));
         Log.msg("Translating method: %s", mi.toString());
-
-        if (translateInstructions) {
-            final MethodImplementation impl = method.getImplementation();
-            // Decode instructions
-            if (impl != null) {
-                MethodImplementationTranslator mit = new MethodImplementationTranslator(ci.scope, resolver);
-                mit.translate(mi, impl);
-            }
-        }
-
+        collector.put(mi, method.getImplementation());
         return mi;
     }
 
     private ImmutableList<MethodInfo> translateMethods(ClassInfo ci, Iterable<? extends Method> methods
-            , InvocationResolver resolver) {
+            , IdentityHashMap<MethodInfo, MethodImplementation> collector) {
         ImmutableList.Builder<MethodInfo> builder = ImmutableList.builder();
         for (Method method : methods) {
-            builder.add(translateMethod(ci, method, resolver));
+            builder.add(translateMethod(ci, method, collector));
         }
         return builder.build();
     }

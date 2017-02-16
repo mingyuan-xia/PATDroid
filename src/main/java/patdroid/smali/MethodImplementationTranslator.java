@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableList;
 import org.jf.dexlib2.Opcode;
 import org.jf.dexlib2.iface.ExceptionHandler;
 import org.jf.dexlib2.iface.MethodImplementation;
@@ -63,7 +64,6 @@ import patdroid.util.Pair;
 @SuppressWarnings("incomplete-switch")
 final class MethodImplementationTranslator {
     private final Scope scope;
-    private final InvocationResolver resolver;
     private MethodInfo mi;
     private int currentCodeAddress;
     private int currentCodeIndex;
@@ -76,9 +76,8 @@ final class MethodImplementationTranslator {
     private final HashMap<Integer, PayloadInstruction> payloadCache =
             new HashMap<Integer, PayloadInstruction>();
 
-    MethodImplementationTranslator(Scope scope, InvocationResolver resolver) {
+    MethodImplementationTranslator(Scope scope) {
         this.scope = scope;
-        this.resolver = resolver;
     }
 
     private static Instruction translateReturn(final Instruction10x i0) {
@@ -1141,6 +1140,21 @@ final class MethodImplementationTranslator {
         return realArgs;
     }
 
+    private MethodInfo translateMethodReference(MethodReference method, boolean isStatic) {
+        ClassInfo ci = Dalvik.findOrCreateClass(scope, method.getDefiningClass());
+        ClassInfo retType = Dalvik.findOrCreateClass(scope, method.getReturnType());
+        ImmutableList<ClassInfo> paramTypes = SmaliClassDetailLoader.findOrCreateClasses(scope, method.getParameterTypes());
+        MethodSignature signature = new MethodSignature(method.getName(), paramTypes);
+        MethodInfo userMethod = ci.findMethod(signature);
+        // for user methods, there wont be two methods with the same signature in one class
+        if (userMethod != null && userMethod.returnType == retType) return userMethod;
+        // the tricky part is with synthetic methods, which could violate this rule
+        for (MethodInfo mi: ci.mutableDetail.syntheticMethods.get(signature)) {
+            if (mi.returnType == retType) return mi;
+        }
+        return null;
+    }
+
     private Instruction translateInvoke(final Instruction35c i5) {
         final Instruction i = new Instruction();
         i.opcode = Instruction.OP_INVOKE_OP;
@@ -1165,8 +1179,12 @@ final class MethodImplementationTranslator {
         }
         final MethodReference mr = (MethodReference) i5.getReference();
         final int[] args = rebuildArgs(mr, getArguments(i5), isStatic);
-        i.extra = new Object[] {mr, args};
-        resolver.registerForResolve(this.mi, currentCodeIndex);
+        final MethodInfo realMethod = translateMethodReference(mr, isStatic);
+        if (realMethod == null) {
+            Log.debug("Cannot resolve method invocation, replace with HALT: " + mr);
+            i.opcode = Instruction.OP_HALT;
+        }
+        i.extra = new Object[] {realMethod, args};
         return i;
     }
 
@@ -1194,8 +1212,12 @@ final class MethodImplementationTranslator {
         }
         final MethodReference mr = (MethodReference) ir.getReference();
         final int[] args = rebuildArgs(mr, getArguments(ir), isStatic);
-        i.extra = new Object[] {mr, args};
-        resolver.registerForResolve(this.mi, currentCodeIndex);
+        final MethodInfo realMethod = translateMethodReference(mr, isStatic);
+        if (realMethod == null) {
+            Log.debug("Cannot resolve method invocation, replace with HALT: " + mr);
+            i.opcode = Instruction.OP_HALT;
+        }
+        i.extra = new Object[] {realMethod, args};
         return i;
     }
 
@@ -1261,7 +1283,7 @@ final class MethodImplementationTranslator {
         payloadCache.put(currentCodeAddress, p);
     }
 
-    public void translate(final MethodInfo mi, final MethodImplementation impl) {
+    void translate(final MethodInfo mi, final MethodImplementation impl) {
         this.mi = mi;
         currentCodeAddress = 0;
         final ArrayList<Instruction> insns = new ArrayList<Instruction>();
