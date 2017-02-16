@@ -24,6 +24,8 @@ import java.util.*;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
 import patdroid.util.Log;
 
 /**
@@ -36,6 +38,7 @@ public final class ClassDetail {
     public final ImmutableList<ClassInfo> interfaces;
     public final int accessFlags;
     public final ImmutableMap<MethodSignature, MethodInfo> methods;
+    public final ImmutableMultimap<MethodSignature, MethodInfo> syntheticMethods;
     public final ImmutableMap<String, ClassInfo> fields;
     public final ImmutableMap<String, ClassInfo> staticFields;
     public final boolean isFrameworkClass;
@@ -59,12 +62,13 @@ public final class ClassDetail {
      * @param isFrameworkClass whether it is a framework class
      */
     private ClassDetail(ClassInfo baseType, List<ClassInfo> interfaces, int accessFlags,
-                        Map<MethodSignature, MethodInfo> methods,
+                        Map<MethodSignature, MethodInfo> methods, Multimap<MethodSignature, MethodInfo> syntheticMethods,
                         Map<String, ClassInfo> fields, Map<String, ClassInfo> staticFields, boolean isFrameworkClass) {
         this.accessFlags = accessFlags;
         this.baseType = baseType;
         this.interfaces = ImmutableList.copyOf(interfaces);
         this.methods = ImmutableMap.copyOf(methods);
+        this.syntheticMethods = ImmutableMultimap.copyOf(syntheticMethods);
         this.fields = ImmutableMap.copyOf(fields);
         this.staticFields = ImmutableMap.copyOf(staticFields);
         this.isFrameworkClass = isFrameworkClass;
@@ -73,12 +77,17 @@ public final class ClassDetail {
     public static ClassDetail create(ClassInfo baseType, List<ClassInfo> interfaces, int accessFlags,
                                      List<MethodInfo> methods, Map<String, ClassInfo> fields,
                                      Map<String, ClassInfo> staticFields, boolean isFrameworkClass) {
+        ImmutableMultimap.Builder<MethodSignature, MethodInfo> syntheticMethodsBuilder = ImmutableMultimap.builder();
         ImmutableMap.Builder<MethodSignature, MethodInfo> methodsBuilder = ImmutableMap.builder();
         for (MethodInfo method : methods) {
-            methodsBuilder.put(method.signature, method);
+            if (method.isSynthetic) {
+                syntheticMethodsBuilder.put(method.signature, method);
+            } else {
+                methodsBuilder.put(method.signature, method);
+            }
         }
         return new ClassDetail(baseType, interfaces, accessFlags,
-                methodsBuilder.build(), fields, staticFields, isFrameworkClass);
+                methodsBuilder.build(), syntheticMethodsBuilder.build(), fields, staticFields, isFrameworkClass);
     }
 
     /**
@@ -217,7 +226,7 @@ public final class ClassDetail {
 
     public ClassDetail changeBaseType(ClassInfo baseType) {
         ClassDetail details = new ClassDetail(baseType, interfaces, accessFlags,
-                methods, fields, staticFields, isFrameworkClass);
+                methods, syntheticMethods, fields, staticFields, isFrameworkClass);
         details.derivedClasses = this.derivedClasses;
         return details;
     }

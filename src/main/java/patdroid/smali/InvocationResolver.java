@@ -42,11 +42,18 @@ class InvocationResolver {
     }
 
     private MethodInfo translateMethodReference(MethodReference method, boolean isStatic) {
-        int accessFlags = isStatic ? Modifier.STATIC : 0;
         ClassInfo ci = Dalvik.findOrCreateClass(scope, method.getDefiningClass());
         ClassInfo retType = Dalvik.findOrCreateClass(scope, method.getReturnType());
         ImmutableList<ClassInfo> paramTypes = SmaliClassDetailLoader.findOrCreateClasses(scope, method.getParameterTypes());
-        return new MethodInfo(ci, new MethodSignature(method.getName(), paramTypes), retType, accessFlags);
+        MethodSignature signature = new MethodSignature(method.getName(), paramTypes);
+        MethodInfo userMethod = ci.findMethod(signature);
+        // for user methods, there wont be two methods with the same signature in one class
+        if (userMethod != null && userMethod.returnType == retType) return userMethod;
+        // the tricky part is with synthetic methods, which could violate this rule
+        for (MethodInfo mi: ci.mutableDetail.syntheticMethods.get(signature)) {
+            if (mi.returnType == retType) return mi;
+        }
+        return null;
     }
 
     /**
@@ -67,9 +74,7 @@ class InvocationResolver {
             final Instruction i = p.first.insns[insn_idx];
             final Object[] params = (Object[]) i.extra;
             final MethodReference mr = (MethodReference) params[0];
-            final boolean isStatic = i.opcode_aux == Instruction.OP_INVOKE_STATIC;
-            final int[] args = (int[]) params[1];
-            final MethodInfo realMethod = translateMethodReference(mr, isStatic);
+            final MethodInfo realMethod = translateMethodReference(mr, i.opcode_aux == Instruction.OP_INVOKE_STATIC);
             if (realMethod == null) {
                 Log.debug("Cannot resolve method invocation, replace with HALT: " + mr);
                 i.opcode = Instruction.OP_HALT;

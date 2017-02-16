@@ -83,7 +83,7 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         File f = new File(Settings.frameworkClassesFolder, "android-" + apiLevel + ".dex");
         if (!f.exists())
             throw new RuntimeException("framework file not available");
-        DexFile dex = null;
+        DexFile dex;
         try {
             dex = DexFileFactory.loadDexFile(f, apiLevel);
         } catch (IOException e) {
@@ -135,7 +135,7 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         final ImmutableList<ClassInfo> paramTypes = findOrCreateClasses(ci.scope, method.getParameterTypes());
         final MethodSignature signature = new MethodSignature(method.getName(), paramTypes);
         final int accessFlags = translateAccessFlags(method.getAccessFlags());
-        final MethodInfo mi = new MethodInfo(ci, signature, retType, accessFlags);
+        final MethodInfo mi = new MethodInfo(ci, signature, retType, accessFlags, AccessFlags.SYNTHETIC.isSet(method.getAccessFlags()));
         Log.msg("Translating method: %s", mi.toString());
 
         if (translateInstructions) {
@@ -154,10 +154,6 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
             , InvocationResolver resolver) {
         ImmutableList.Builder<MethodInfo> builder = ImmutableList.builder();
         for (Method method : methods) {
-            // TODO(iceboy): Put synthetic into MethodSignature, as they have the same name as non-synthetic methods.
-            if (AccessFlags.SYNTHETIC.isSet(method.getAccessFlags())) {
-                continue;
-            }
             builder.add(translateMethod(ci, method, resolver));
         }
         return builder.build();

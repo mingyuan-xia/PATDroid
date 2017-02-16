@@ -53,6 +53,10 @@ public final class MethodInfo {
      */
     public final int modifiers;
     /**
+     * Whether the method is a compiler-generated method
+     */
+    public final boolean isSynthetic;
+    /**
      * The return type
      * <p> if the method is a constructor or a static initializer, this will always be void </p>
      */
@@ -78,23 +82,12 @@ public final class MethodInfo {
      * @param returnType the return type
      * @param accessFlags the access flags
      */
-    public MethodInfo(ClassInfo type, MethodSignature signature, ClassInfo returnType, int accessFlags) {
+    public MethodInfo(ClassInfo type, MethodSignature signature, ClassInfo returnType, int accessFlags, boolean isSynthetic) {
         this.type = type;
         this.signature = signature;
         this.returnType = returnType;
         this.modifiers = accessFlags;
-    }
-
-    /**
-     * Construct a function prototype
-     * @param signature the method signature
-     * @param returnType the return type
-     * @param accessFlags access flags, zero if none
-     * @return the method prototype
-     */
-    @Deprecated
-    public static MethodInfo makePrototype(MethodSignature signature, ClassInfo returnType, int accessFlags) {
-        return new MethodInfo(null, signature, returnType, accessFlags);
+        this.isSynthetic = isSynthetic;
     }
 
     /**

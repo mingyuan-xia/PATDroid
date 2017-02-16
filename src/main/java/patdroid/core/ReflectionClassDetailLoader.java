@@ -58,7 +58,7 @@ public class ReflectionClassDetailLoader extends ClassDetailLoader {
         }
         if (hasStaticFields) {
             methods.add(new MethodInfo(type, MethodSignature.of(MethodInfo.STATIC_INITIALIZER),
-                    scope.primitiveVoid, Modifier.STATIC));
+                    scope.primitiveVoid, Modifier.STATIC, false));
         }
         // TODO: do we actually need this?? I think the synthetic fields are included in declared fields
         // see http://www.public.iastate.edu/~java/docs/guide/innerclasses/html/innerclasses.doc.html
@@ -72,14 +72,14 @@ public class ReflectionClassDetailLoader extends ClassDetailLoader {
         for (Method m : c.getDeclaredMethods()) {
             MethodSignature signature = MethodSignature.of(scope, m.getName(), m.getParameterTypes());
             ClassInfo returnType = scope.findOrCreateClass(m.getReturnType());
-            methods.add(new MethodInfo(type, signature, returnType, m.getModifiers()));
+            methods.add(new MethodInfo(type, signature, returnType, m.getModifiers(), false));
         }
 
         // transform the class constructors
         for (Constructor<?> m : c.getDeclaredConstructors()) {
             MethodSignature signature = MethodSignature.of(scope, MethodInfo.CONSTRUCTOR, m.getParameterTypes());
             ClassInfo returnType = scope.primitiveVoid;
-            methods.add(new MethodInfo(type, signature, returnType, m.getModifiers()));
+            methods.add(new MethodInfo(type, signature, returnType, m.getModifiers(), false));
         }
 
         // transform interfaces
