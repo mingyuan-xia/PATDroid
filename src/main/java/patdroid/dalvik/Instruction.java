@@ -186,6 +186,8 @@ public final class Instruction {
             return Arrays.deepToString((Object[]) extra);
         } else if (extra instanceof FieldInfo) {
             return extra.toString();
+        } else if (extra instanceof Invocation) {
+            return extra.toString();
         } else {
             return "?" + extra.toString();
         }

@@ -40,6 +40,7 @@ import org.jf.dexlib2.iface.reference.*;
 import patdroid.core.*;
 import patdroid.dalvik.Dalvik;
 import patdroid.dalvik.Instruction;
+import patdroid.dalvik.Invocation;
 import patdroid.util.Log;
 import patdroid.util.Pair;
 
@@ -1140,7 +1141,7 @@ final class MethodImplementationTranslator {
         return realArgs;
     }
 
-    private MethodInfo translateMethodReference(MethodReference method, boolean isStatic) {
+    private MethodInfo bindMethodReference(MethodReference method, boolean isStatic) {
         ClassInfo ci = Dalvik.findOrCreateClass(scope, method.getDefiningClass());
         ClassInfo retType = Dalvik.findOrCreateClass(scope, method.getReturnType());
         ImmutableList<ClassInfo> paramTypes = SmaliClassDetailLoader.findOrCreateClasses(scope, method.getParameterTypes());
@@ -1153,6 +1154,27 @@ final class MethodImplementationTranslator {
             if (mi.returnType == retType) return mi;
         }
         return null;
+    }
+
+    private Invocation resolveInvocation(MethodReference mr, boolean isStatic, int[] args) {
+        MethodInfo realMethod = bindMethodReference(mr, isStatic);
+        boolean resolved;
+        if (realMethod == null) {
+            Log.debug("Cannot resolve method invocation, replace with dummy: " + mr);
+            resolved = false;
+            realMethod = createDummyMethodInfo(mr);
+        } else {
+            resolved = true;
+        }
+        return new Invocation(resolved, realMethod, args);
+    }
+
+    private MethodInfo createDummyMethodInfo(MethodReference mr) {
+        ClassInfo ci = Dalvik.findOrCreateClass(scope, mr.getDefiningClass());
+        ClassInfo retType = Dalvik.findOrCreateClass(scope, mr.getReturnType());
+        ImmutableList<ClassInfo> paramTypes = SmaliClassDetailLoader.findOrCreateClasses(scope, mr.getParameterTypes());
+        MethodSignature signature = new MethodSignature(mr.getName(), paramTypes);
+        return new MethodInfo(ci, signature, retType, 0, false);
     }
 
     private Instruction translateInvoke(final Instruction35c i5) {
@@ -1179,12 +1201,7 @@ final class MethodImplementationTranslator {
         }
         final MethodReference mr = (MethodReference) i5.getReference();
         final int[] args = rebuildArgs(mr, getArguments(i5), isStatic);
-        final MethodInfo realMethod = translateMethodReference(mr, isStatic);
-        if (realMethod == null) {
-            Log.debug("Cannot resolve method invocation, replace with HALT: " + mr);
-            i.opcode = Instruction.OP_HALT;
-        }
-        i.extra = new Object[] {realMethod, args};
+        i.extra = resolveInvocation(mr, isStatic, args);
         return i;
     }
 
@@ -1212,12 +1229,7 @@ final class MethodImplementationTranslator {
         }
         final MethodReference mr = (MethodReference) ir.getReference();
         final int[] args = rebuildArgs(mr, getArguments(ir), isStatic);
-        final MethodInfo realMethod = translateMethodReference(mr, isStatic);
-        if (realMethod == null) {
-            Log.debug("Cannot resolve method invocation, replace with HALT: " + mr);
-            i.opcode = Instruction.OP_HALT;
-        }
-        i.extra = new Object[] {realMethod, args};
+        i.extra = resolveInvocation(mr, isStatic, args);
         return i;
     }
 
