@@ -22,6 +22,8 @@ package patdroid.core;
 import com.google.common.base.Objects;
 import patdroid.util.Log;
 
+import static com.google.common.base.Preconditions.checkState;
+
 /**
  * Low-level primitive type value (immutable).
  */
@@ -101,32 +103,32 @@ public final class PrimitiveInfo {
     }
 
     public final int intValue() {
-        Log.doAssert(isInteger(), "invalid type");
+        checkState(isInteger(), "invalid type");
         return low32;
     }
 
     public final long longValue() {
-        Log.doAssert(isLong(), "invalid type");
+        checkState(isLong(), "invalid type");
         return getLong();
     }
 
     public final double doubleValue() {
-        Log.doAssert(isDouble(), "invalid type");
+        checkState(isDouble(), "invalid type");
         return Double.longBitsToDouble(getLong());
     }
 
     public final float floatValue() {
-        Log.doAssert(isFloat(), "invalid type");
+        checkState(isFloat(), "invalid type");
         return Float.intBitsToFloat(low32);
     }
 
     public final boolean booleanValue() {
-        Log.doAssert(isBoolean(), "invalid type");
+        checkState(isBoolean(), "invalid type");
         return low32 == 1;
     }
 
     public PrimitiveInfo unsafeCastTo(ClassInfo targetType) {
-        Log.doAssert(targetType.isPrimitive(), "must cast to a primitive type");
+        checkState(targetType.isPrimitive(), "must cast to a primitive type");
         if (targetType == type.scope.primitiveChar ||
                 targetType == type.scope.primitiveShort ||
                 targetType == type.scope.primitiveByte) {
@@ -136,8 +138,8 @@ public final class PrimitiveInfo {
     }
 
     public final PrimitiveInfo castTo(ClassInfo targetType) {
-        Log.doAssert(targetType.isPrimitive(), "must cast to a primitive type");
-        Log.doAssert(targetType.scope == type.scope, "must be in the same scope");
+        checkState(targetType.isPrimitive(), "must cast to a primitive type");
+        checkState(targetType.scope == type.scope, "must be in the same scope");
         PrimitiveInfo v = null;
         if (targetType == type.scope.primitiveInt) {
             int val = 0;

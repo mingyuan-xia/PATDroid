@@ -44,6 +44,8 @@ import patdroid.dalvik.Invocation;
 import patdroid.util.Log;
 import patdroid.util.Pair;
 
+import static com.google.common.base.Preconditions.checkState;
+
 /**
  * For every method implementation that needs to be translated, translate()
  * is called and every instruction is dispatched to the translator function
@@ -739,7 +741,7 @@ final class MethodImplementationTranslator {
         final int payloadAddress = currentCodeAddress + i1.getCodeOffset();
         PayloadInstruction p = payloadCache.get(payloadAddress);
         if (p != null) {
-            Log.doAssert(p.getOpcode() == Opcode.ARRAY_PAYLOAD, "payload type mismatch");
+            checkState(p.getOpcode() == Opcode.ARRAY_PAYLOAD, "payload type mismatch");
             applyPayload(i, (ArrayPayload)p);
         } else {
             ArrayList<Instruction> defers = payloadDefers.get(payloadAddress);
@@ -795,7 +797,7 @@ final class MethodImplementationTranslator {
         PayloadInstruction p = payloadCache.get(payloadAddress);
         if (p != null) {
             final Opcode opcode = p.getOpcode();
-            Log.doAssert(opcode == Opcode.PACKED_SWITCH_PAYLOAD ||
+            checkState(opcode == Opcode.PACKED_SWITCH_PAYLOAD ||
                     opcode == Opcode.SPARSE_SWITCH_PAYLOAD, "payload type mismatch");
             applyPayload(i, (SwitchPayload)p);
         } else {
@@ -1137,7 +1139,7 @@ final class MethodImplementationTranslator {
             if (ci == scope.primitiveLong || ci == scope.primitiveDouble)
                 ++j;
         }
-        Log.doAssert(j == args.length, "argument size mismatch");
+        checkState(j == args.length, "argument size mismatch");
         return realArgs;
     }
 
@@ -1236,7 +1238,7 @@ final class MethodImplementationTranslator {
     private void applyPayload(final Instruction i, final PayloadInstruction p) {
         final Opcode opcode = p.getOpcode();
         if (opcode == Opcode.ARRAY_PAYLOAD) {
-            Log.doAssert(i.opcode == Instruction.OP_NEW &&
+            checkState(i.opcode == Instruction.OP_NEW &&
                     i.opcode_aux == Instruction.OP_NEW_FILLED_ARRAY, "payload type mismatch");
             final List<Number> elements = ((ArrayPayload) p).getArrayElements();
             final PrimitiveInfo[] array = new PrimitiveInfo[elements.size()];
@@ -1246,7 +1248,7 @@ final class MethodImplementationTranslator {
             i.extra = array;
         } else if (opcode == Opcode.PACKED_SWITCH_PAYLOAD ||
                 opcode == Opcode.SPARSE_SWITCH_PAYLOAD) {
-            Log.doAssert(i.opcode == Instruction.OP_SWITCH, "payload type mismatch");
+            checkState(i.opcode == Instruction.OP_SWITCH, "payload type mismatch");
             final int switchAddress = (Integer) i.extra;
             final List<? extends SwitchElement> table = ((SwitchPayload) p).getSwitchElements();
             boolean resolvable = true;
@@ -1753,8 +1755,8 @@ final class MethodImplementationTranslator {
             currentCodeAddress += i.getCodeUnits();
         }
 
-        Log.doAssert(unresolvedInsns.isEmpty(), "unresolved instruction");
-        Log.doAssert(payloadDefers.isEmpty(), "unresolved payload");
+        checkState(unresolvedInsns.isEmpty(), "unresolved instruction");
+        checkState(payloadDefers.isEmpty(), "unresolved payload");
         mi.insns = insns.toArray(new Instruction[insns.size()]);
 
         // try catch blocks
