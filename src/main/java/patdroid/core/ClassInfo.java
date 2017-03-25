@@ -27,6 +27,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import patdroid.util.Log;
 
+import static com.google.common.base.Preconditions.checkState;
+
 /**
  * The class representation. Each class is uniquely identified by its full name.
  * So given a class full name, there is exactly one ClassInfo representing it.
@@ -205,7 +207,7 @@ public final class ClassInfo {
      * @return the element type
      */
     public ClassInfo getElementClass() {
-        Log.doAssert(isArray(), "Try getting the element class of a non-array class " + this);
+        checkState(isArray(), "Try getting the element class of a non-array class " + this);
         final char first = fullName.charAt(1);
         switch (first) {
         case 'C': return scope.primitiveChar;
@@ -263,7 +265,7 @@ public final class ClassInfo {
      * @return the outer class
      */
     public ClassInfo getOuterClass() {
-        Log.doAssert(isInnerClass(), "Try getting the outer class from a non-inner class" + this);
+        checkState(isInnerClass(), "Try getting the outer class from a non-inner class" + this);
         return scope.findOrCreateClass(fullName.substring(0, fullName.lastIndexOf('$')));
     }
 

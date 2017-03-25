@@ -84,7 +84,6 @@ public class Log {
     public static void increaseIndent() { indent.set(indent.get() + "  "); }
     public static void decreaseIndent() { indent.set(indent.get().substring(2)); }
     public static void resetIndent() { indent.remove(); }
-    public static void doAssert(boolean b, String msg) { if (!b) { err(msg); } }
     public static void msg(String format, Object... args) { msg(String.format(format, args)); }
     public static void msg(String s) { log(MODE_MSG, "MSG", s);    }
     public static void debug(String format, Object... args) { debug(String.format(format, args));    }
