@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 if [ $# -ne 1 ]; then
   echo "Usage: gen.sh path/to/android/sdk"
   exit

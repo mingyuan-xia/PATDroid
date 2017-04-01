@@ -93,6 +93,10 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         return new SmaliClassDetailLoader(new DexFile[] {dex}, false, true);
     }
 
+    public static SmaliClassDetailLoader fromDexfile(DexFile dex, boolean translateInstructions) throws RuntimeException {
+        return new SmaliClassDetailLoader(new DexFile[] {dex}, translateInstructions, false);
+    }
+
     /**
      * Parse an apk file and extract all classes, methods, fields and optionally instructions
      */

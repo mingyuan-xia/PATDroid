@@ -40,9 +40,7 @@ import static com.google.common.base.Preconditions.checkState;
  * ClassInfos are obtained by find-series functions not created by constructors.
  */
 public final class ClassInfo {
-    private static final ClassDetail MISSING_DETAIL = ClassDetail.create(
-            null, ImmutableList.<ClassInfo>of(), 0, ImmutableList.<MethodInfo>of(),
-            ImmutableMap.<String, ClassInfo>of(), ImmutableMap.<String, ClassInfo>of(), true);
+    private static final ClassDetail MISSING_DETAIL = new ClassDetail.Builder().build();
     private static final MethodSignature STATIC_INITIALIZER = MethodSignature.of(MethodInfo.STATIC_INITIALIZER);
     private final MethodSignature DEFAULT_CONSTRUCTOR = MethodSignature.of(MethodInfo.CONSTRUCTOR, this);
 

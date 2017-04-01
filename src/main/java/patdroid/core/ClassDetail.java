@@ -43,6 +43,76 @@ public final class ClassDetail {
     public final ImmutableMap<String, ClassInfo> staticFields;
     public final boolean isFrameworkClass;
 
+    public static final class Builder {
+        ClassInfo baseType;
+        ImmutableList<ClassInfo> interfaces;
+        int accessFlags;
+        ImmutableMap<MethodSignature, MethodInfo> methods;
+        ImmutableMultimap<MethodSignature, MethodInfo> syntheticMethods;
+        ImmutableMap<String, ClassInfo> fields;
+        ImmutableMap<String, ClassInfo> staticFields;
+        boolean isFrameworkClass;
+        public Builder() {
+            baseType = null;
+            interfaces = ImmutableList.<ClassInfo>of();
+            accessFlags = 0;
+            methods = ImmutableMap.<MethodSignature, MethodInfo>of();
+            syntheticMethods = ImmutableMultimap.<MethodSignature, MethodInfo>of();
+            fields = ImmutableMap.<String, ClassInfo>of();
+            isFrameworkClass = true;
+        }
+
+        public Builder setBaseType(ClassInfo baseType) {
+            this.baseType = baseType;
+            return this;
+        }
+        public Builder setInteraces(List<ClassInfo> interfaces) {
+            this.interfaces = ImmutableList.copyOf(interfaces);
+            return this;
+        }
+        public Builder setAccessFlags(int accessFlags) {
+            this.accessFlags = accessFlags;
+            return this;
+        }
+        public Builder setNormalMethods(Map<MethodSignature, MethodInfo> methods) {
+            this.methods = ImmutableMap.copyOf(methods);
+            return this;
+        }
+        public Builder setSyntheticMethods(Multimap<MethodSignature, MethodInfo> syntheticMethods) {
+            this.syntheticMethods = ImmutableMultimap.copyOf(syntheticMethods);
+            return this;
+        }
+        public Builder setAllMethods(List<MethodInfo> methods) {
+            ImmutableMultimap.Builder<MethodSignature, MethodInfo> syntheticMethodsBuilder = ImmutableMultimap.builder();
+            ImmutableMap.Builder<MethodSignature, MethodInfo> methodsBuilder = ImmutableMap.builder();
+            for (MethodInfo method : methods) {
+                if (method.isSynthetic) {
+                    syntheticMethodsBuilder.put(method.signature, method);
+                } else {
+                    methodsBuilder.put(method.signature, method);
+                }
+            }
+            this.methods = methodsBuilder.build();
+            this.syntheticMethods = syntheticMethodsBuilder.build();
+            return this;
+        }
+        public Builder setFields(Map<String, ClassInfo> fields) {
+            this.fields = ImmutableMap.copyOf(fields);
+            return this;
+        }
+        public Builder setStaticFields(Map<String, ClassInfo> staticFields) {
+            this.staticFields = ImmutableMap.copyOf(staticFields);
+            return this;
+        }
+        public Builder setIsFrameworkClass(boolean isFrameworkClass) {
+            this.isFrameworkClass = isFrameworkClass;
+            return this;
+        }
+        public ClassDetail build() {
+            return new ClassDetail(this);
+        }
+    }
+
     /**
      * A list of classes inherit this class.
      * Note that derivedClasses only covers loaded classes.
@@ -51,43 +121,17 @@ public final class ClassDetail {
     public ArrayList<ClassInfo> derivedClasses = new ArrayList<ClassInfo>();
 
     /**
-     * Create a details class for a class.
-     * Only a ClassDetailLoader could construct a ClassDetail
-     * @param baseType its base type
-     * @param interfaces interfaces
-     * @param accessFlags the access flags on the class
-     * @param methods methods, stored in a name-type map
-     * @param fields non-static fields, stored in a name-type map
-     * @param staticFields static fields, stored in a name-type map
-     * @param isFrameworkClass whether it is a framework class
+     * Create a details class from a builder
      */
-    private ClassDetail(ClassInfo baseType, List<ClassInfo> interfaces, int accessFlags,
-                        Map<MethodSignature, MethodInfo> methods, Multimap<MethodSignature, MethodInfo> syntheticMethods,
-                        Map<String, ClassInfo> fields, Map<String, ClassInfo> staticFields, boolean isFrameworkClass) {
-        this.accessFlags = accessFlags;
-        this.baseType = baseType;
-        this.interfaces = ImmutableList.copyOf(interfaces);
-        this.methods = ImmutableMap.copyOf(methods);
-        this.syntheticMethods = ImmutableMultimap.copyOf(syntheticMethods);
-        this.fields = ImmutableMap.copyOf(fields);
-        this.staticFields = ImmutableMap.copyOf(staticFields);
-        this.isFrameworkClass = isFrameworkClass;
-    }
-
-    public static ClassDetail create(ClassInfo baseType, List<ClassInfo> interfaces, int accessFlags,
-                                     List<MethodInfo> methods, Map<String, ClassInfo> fields,
-                                     Map<String, ClassInfo> staticFields, boolean isFrameworkClass) {
-        ImmutableMultimap.Builder<MethodSignature, MethodInfo> syntheticMethodsBuilder = ImmutableMultimap.builder();
-        ImmutableMap.Builder<MethodSignature, MethodInfo> methodsBuilder = ImmutableMap.builder();
-        for (MethodInfo method : methods) {
-            if (method.isSynthetic) {
-                syntheticMethodsBuilder.put(method.signature, method);
-            } else {
-                methodsBuilder.put(method.signature, method);
-            }
-        }
-        return new ClassDetail(baseType, interfaces, accessFlags,
-                methodsBuilder.build(), syntheticMethodsBuilder.build(), fields, staticFields, isFrameworkClass);
+    private ClassDetail(Builder builder) {
+        this.accessFlags = builder.accessFlags;
+        this.baseType = builder.baseType;
+        this.interfaces = builder.interfaces;
+        this.methods = builder.methods;
+        this.syntheticMethods = builder.syntheticMethods;
+        this.fields = builder.fields;
+        this.staticFields = builder.staticFields;
+        this.isFrameworkClass = builder.isFrameworkClass;
     }
 
     /**
@@ -225,8 +269,16 @@ public final class ClassDetail {
     }
 
     public ClassDetail changeBaseType(ClassInfo baseType) {
-        ClassDetail details = new ClassDetail(baseType, interfaces, accessFlags,
-                methods, syntheticMethods, fields, staticFields, isFrameworkClass);
+        Builder builder = new Builder();
+        ClassDetail details = builder.setBaseType(baseType)
+                .setInteraces(interfaces)
+                .setAccessFlags(accessFlags)
+                .setNormalMethods(methods)
+                .setSyntheticMethods(syntheticMethods)
+                .setFields(fields)
+                .setStaticFields(staticFields)
+                .setIsFrameworkClass(isFrameworkClass)
+                .build();
         details.derivedClasses = this.derivedClasses;
         return details;
     }
