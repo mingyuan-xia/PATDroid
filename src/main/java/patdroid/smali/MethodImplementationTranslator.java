@@ -1135,8 +1135,7 @@ final class MethodImplementationTranslator {
             realArgs[i++] = args[j++];
         for (CharSequence smaliType: mr.getParameterTypes()) {
             realArgs[i++] = args[j++];
-            final ClassInfo ci = scope.findOrCreateClass(smaliType.toString());
-            if (ci == scope.primitiveLong || ci == scope.primitiveDouble)
+            if (smaliType.equals("J") || smaliType.equals("D"))
                 ++j;
         }
         checkState(j == args.length, "argument size mismatch");
