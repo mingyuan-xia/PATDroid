@@ -32,12 +32,4 @@ public class Settings {
      * The report mode generates a JSON output
      */
     public static boolean enableReportMode = logLevel >= Log.MODE_REPORT;
-    /**
-     * The Android API Level, default 19 (Android 4.4 KitKat)
-     */
-    public static int apiLevel = 19;
-    /**
-     * The folder storing all framework classes dex files
-     */
-    public static final File frameworkClassesFolder = new File("apilevels");
 }

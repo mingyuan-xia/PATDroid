@@ -46,10 +46,11 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
     /**
      * Create a loader that loads from an APK file (could contain multiple DEX files), optionally loading instructions
      * @param apkFile the APK file
+     * @param apiLevel the Android API level
      * @param translateInstructions true if the instructions shall be loaded
      * @return A smali class detail loader to load classes from the containing DEX files
      */
-    public static SmaliClassDetailLoader fromApkFile(ZipFile apkFile, boolean translateInstructions) {
+    public static SmaliClassDetailLoader fromApkFile(ZipFile apkFile, int apiLevel, boolean translateInstructions) {
         ArrayList<ZipEntry> dexEntries = new ArrayList<ZipEntry>();
         dexEntries.add(apkFile.getEntry("classes.dex"));
         for (int i = 2; i < 99; ++i) {
@@ -66,7 +67,7 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         }
 
         DexFile[] dexFiles = new DexFile[n];
-        final Opcodes opcodes = Opcodes.forApi(Settings.apiLevel);
+        final Opcodes opcodes = Opcodes.forApi(apiLevel);
         try {
             for (int i = 0; i < n; ++i) {
                 dexFiles[i] = DexBackedDexFile.fromInputStream(opcodes,
@@ -79,8 +80,8 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         return new SmaliClassDetailLoader(dexFiles, translateInstructions, false);
     }
 
-    public static SmaliClassDetailLoader fromFramework(int apiLevel) throws RuntimeException {
-        File f = new File(Settings.frameworkClassesFolder, "android-" + apiLevel + ".dex");
+    public static SmaliClassDetailLoader fromFramework(File frameworkClassesFolder, int apiLevel) {
+        File f = new File(frameworkClassesFolder, "android-" + apiLevel + ".dex");
         if (!f.exists())
             throw new RuntimeException("framework file not available");
         DexFile dex;
