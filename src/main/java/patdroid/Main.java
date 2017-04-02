@@ -11,6 +11,9 @@ import java.io.IOException;
 import java.util.zip.ZipFile;
 
 public class Main {
+    private static final File FRAMEWORK_CLASSES_FOLDER = new File("apilevels");
+    private static final int API_LEVEL = 19;
+
     /**
      * An example using the PATDroid APIs to print all classes
      * and containing methods in an APK file
@@ -24,12 +27,12 @@ public class Main {
         }
         Scope scope = new Scope();
         // load all framework classes, choose an API level installed
-        SmaliClassDetailLoader.fromFramework(19).loadAll(scope);
+        SmaliClassDetailLoader.fromFramework(FRAMEWORK_CLASSES_FOLDER, API_LEVEL).loadAll(scope);
         // pick an apk
         ZipFile apkFile = new ZipFile(new File(args[0]));
         // load all classes, methods, fields and instructions from an apk
         // we are using smali as the underlying engine
-        SmaliClassDetailLoader.fromApkFile(apkFile, true).loadAll(scope);
+        SmaliClassDetailLoader.fromApkFile(apkFile, API_LEVEL, true).loadAll(scope);
         // get the class representation for the MainActivity class in the apk
         for (ClassInfo c : scope.getAllClasses()) {
             if (!c.isFrameworkClass()) {

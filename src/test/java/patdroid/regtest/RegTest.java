@@ -31,6 +31,7 @@ import static org.junit.Assert.assertNotNull;
  */
 @RunWith(Parameterized.class)
 public class RegTest {
+    private static final File FRAMEWORK_CLASSES_FOLDER = new File("apilevels");
     private static final int API_LEVEL = 19;
     private static final Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
@@ -73,8 +74,8 @@ public class RegTest {
             logger.info("Running regression test for " + apkFile);
         }
 
-        SmaliClassDetailLoader.fromFramework(API_LEVEL).loadAll(scope);
-        SmaliClassDetailLoader.fromApkFile(new ZipFile(apkFile), true).loadAll(scope);
+        SmaliClassDetailLoader.fromFramework(FRAMEWORK_CLASSES_FOLDER, API_LEVEL).loadAll(scope);
+        SmaliClassDetailLoader.fromApkFile(new ZipFile(apkFile), API_LEVEL, true).loadAll(scope);
 
         List<ClassInfo> sortedClasses = Ordering.usingToString().sortedCopy(scope.getAllClasses());
         for (ClassInfo c : sortedClasses) {
