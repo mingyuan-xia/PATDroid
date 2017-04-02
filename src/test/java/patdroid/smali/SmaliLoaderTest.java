@@ -4,12 +4,16 @@ import org.junit.Assert;
 import org.junit.Test;
 import patdroid.core.Scope;
 
+import java.io.File;
+
 public class SmaliLoaderTest {
+    private static final File FRAMEWORK_CLASSES_FOLDER = new File("apilevels");
+    private static final int API_LEVEL = 19;
     private final Scope scope = new Scope();
 
     @Test
     public void testLoadFrameworkClasses() {
-        SmaliClassDetailLoader ldr = SmaliClassDetailLoader.fromFramework(19);
+        SmaliClassDetailLoader ldr = SmaliClassDetailLoader.fromFramework(FRAMEWORK_CLASSES_FOLDER, API_LEVEL);
         if (ldr == null) {
             System.out.println("framework classes loader test skipped, API19 not available");
             return ;
