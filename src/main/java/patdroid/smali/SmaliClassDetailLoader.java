@@ -21,7 +21,6 @@ import org.jf.dexlib2.iface.DexFile;
 import org.jf.dexlib2.iface.Field;
 import org.jf.dexlib2.iface.Method;
 import org.jf.dexlib2.iface.MethodImplementation;
-import org.jf.dexlib2.iface.reference.MethodReference;
 
 import patdroid.Settings;
 import patdroid.core.*;
@@ -121,24 +120,24 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
     }
 
     private ClassDetail translateClassDef(ClassInfo ci, ClassDef classDef, IdentityHashMap<MethodInfo, MethodImplementation> collector) {
-        ClassInfo baseType;
+        ClassDetail.Builder builder = new ClassDetail.Builder();
         if (classDef.getSuperclass() == null) {
-            baseType = null; // for java.lang.Object
+            builder.setBaseType(null); // for java.lang.Object
         } else {
-            baseType = Dalvik.findOrCreateClass(ci.scope, classDef.getSuperclass());
+            builder.setBaseType(Dalvik.findOrCreateClass(ci.scope, classDef.getSuperclass()));
         }
-        final ImmutableList<ClassInfo> interfaces = findOrCreateClasses(ci.scope, classDef.getInterfaces());
-        final int accessFlags = translateAccessFlags(classDef.getAccessFlags());
-        final ImmutableList<MethodInfo> methods = translateMethods(ci, classDef.getMethods(), collector);
-        final HashMap<String, ClassInfo> fields = translateFields(
-                ci.scope, classDef.getInstanceFields());
+        builder.setInteraces(findOrCreateClasses(ci.scope, classDef.getInterfaces()));
+        builder.setAccessFlags(translateAccessFlags(classDef.getAccessFlags()));
+        builder.setAllMethods(translateMethods(ci, classDef.getMethods(), collector));
+        builder.setStaticFields(translateFields(ci.scope, classDef.getStaticFields()));
+        HashMap<String, ClassInfo> fields = translateFields(ci.scope, classDef.getInstanceFields());
         // TODO: do we need this?
         if (ci.isInnerClass()) {
             fields.put("this$0", ci.getOuterClass());
         }
-        final HashMap<String, ClassInfo> staticFields = translateFields(
-                ci.scope, classDef.getStaticFields());
-        return ClassDetail.create(baseType, interfaces, accessFlags, methods, fields, staticFields, isFramework);
+        builder.setFields(fields);
+        builder.setIsFrameworkClass(isFramework);
+        return builder.build();
     }
 
     private MethodInfo translateMethod(ClassInfo ci, Method method, IdentityHashMap<MethodInfo, MethodImplementation> collector) {
