@@ -35,7 +35,7 @@ public class Main {
             if (!c.isFrameworkClass()) {
                 System.out.println(c.fullName);
                 for (MethodInfo m: c.getAllMethods()) {
-                    System.out.println("\t" + m.signature.name);
+                    System.out.println("\t" + m.signature.partialSignature.name);
                     if (m.insns == null) continue;
                     for (Instruction i: m.insns) {
                         System.out.println("\t\t" + i.toString());

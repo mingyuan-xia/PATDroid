@@ -37,8 +37,14 @@ public final class ClassDetail {
     public final ClassInfo baseType;
     public final ImmutableList<ClassInfo> interfaces;
     public final int accessFlags;
-    public final ImmutableMap<MethodSignature, MethodInfo> methods;
-    public final ImmutableMultimap<MethodSignature, MethodInfo> syntheticMethods;
+    /**
+     * Primary index, from a full method signature (with return type) to exactly one possible method
+     */
+    public final ImmutableMap<FullMethodSignature, MethodInfo> methods;
+    /**
+     * Secondary index, from a method signature (without return type) to multiple possible methods
+     */
+    public final ImmutableMultimap<MethodSignature, MethodInfo> methodsIndex;
     public final ImmutableMap<String, ClassInfo> fields;
     public final ImmutableMap<String, ClassInfo> staticFields;
     public final boolean isFrameworkClass;
@@ -47,8 +53,8 @@ public final class ClassDetail {
         ClassInfo baseType;
         ImmutableList<ClassInfo> interfaces;
         int accessFlags;
-        ImmutableMap<MethodSignature, MethodInfo> methods;
-        ImmutableMultimap<MethodSignature, MethodInfo> syntheticMethods;
+        ImmutableMap<FullMethodSignature, MethodInfo> methods;
+        ImmutableMultimap<MethodSignature, MethodInfo> methodsIndex;
         ImmutableMap<String, ClassInfo> fields;
         ImmutableMap<String, ClassInfo> staticFields;
         boolean isFrameworkClass;
@@ -56,8 +62,8 @@ public final class ClassDetail {
             baseType = null;
             interfaces = ImmutableList.<ClassInfo>of();
             accessFlags = 0;
-            methods = ImmutableMap.<MethodSignature, MethodInfo>of();
-            syntheticMethods = ImmutableMultimap.<MethodSignature, MethodInfo>of();
+            methods = ImmutableMap.<FullMethodSignature, MethodInfo>of();
+            methodsIndex = ImmutableMultimap.<MethodSignature, MethodInfo>of();
             fields = ImmutableMap.<String, ClassInfo>of();
             isFrameworkClass = true;
         }
@@ -66,7 +72,7 @@ public final class ClassDetail {
             this.baseType = baseType;
             return this;
         }
-        public Builder setInteraces(List<ClassInfo> interfaces) {
+        public Builder setInterfaces(List<ClassInfo> interfaces) {
             this.interfaces = ImmutableList.copyOf(interfaces);
             return this;
         }
@@ -74,26 +80,24 @@ public final class ClassDetail {
             this.accessFlags = accessFlags;
             return this;
         }
-        public Builder setNormalMethods(Map<MethodSignature, MethodInfo> methods) {
+        public Builder setAllMethods(List<MethodInfo> methods) {
+            // build secondary index
+            ImmutableMultimap.Builder<MethodSignature, MethodInfo> indexBuilder = ImmutableMultimap.builder();
+            ImmutableMap.Builder<FullMethodSignature, MethodInfo> methodsBuilder = ImmutableMap.builder();
+            for (MethodInfo method : methods) {
+                methodsBuilder.put(method.signature, method);
+                indexBuilder.put(method.signature.partialSignature, method);
+            }
+            this.methods = methodsBuilder.build();
+            this.methodsIndex = indexBuilder.build();
+            return this;
+        }
+        public Builder setMethods(Map<FullMethodSignature, MethodInfo> methods) {
             this.methods = ImmutableMap.copyOf(methods);
             return this;
         }
-        public Builder setSyntheticMethods(Multimap<MethodSignature, MethodInfo> syntheticMethods) {
-            this.syntheticMethods = ImmutableMultimap.copyOf(syntheticMethods);
-            return this;
-        }
-        public Builder setAllMethods(List<MethodInfo> methods) {
-            ImmutableMultimap.Builder<MethodSignature, MethodInfo> syntheticMethodsBuilder = ImmutableMultimap.builder();
-            ImmutableMap.Builder<MethodSignature, MethodInfo> methodsBuilder = ImmutableMap.builder();
-            for (MethodInfo method : methods) {
-                if (method.isSynthetic) {
-                    syntheticMethodsBuilder.put(method.signature, method);
-                } else {
-                    methodsBuilder.put(method.signature, method);
-                }
-            }
-            this.methods = methodsBuilder.build();
-            this.syntheticMethods = syntheticMethodsBuilder.build();
+        public Builder setMethodsIndex(Multimap<MethodSignature, MethodInfo> methodsIndex) {
+            this.methodsIndex = ImmutableMultimap.copyOf(methodsIndex);
             return this;
         }
         public Builder setFields(Map<String, ClassInfo> fields) {
@@ -128,7 +132,7 @@ public final class ClassDetail {
         this.baseType = builder.baseType;
         this.interfaces = builder.interfaces;
         this.methods = builder.methods;
-        this.syntheticMethods = builder.syntheticMethods;
+        this.methodsIndex = builder.methodsIndex;
         this.fields = builder.fields;
         this.staticFields = builder.staticFields;
         this.isFrameworkClass = builder.isFrameworkClass;
@@ -176,7 +180,7 @@ public final class ClassDetail {
      * @param signature The signature of a method
      * @return The method matching the prototype in the class
      */
-    public MethodInfo findMethod(MethodSignature signature) {
+    public MethodInfo findMethod(FullMethodSignature signature) {
         Deque<ClassDetail> q = new ArrayDeque<ClassDetail>();
         q.push(this);
         while (!q.isEmpty()) {
@@ -236,7 +240,7 @@ public final class ClassDetail {
     public MethodInfo[] findMethodsHere(String name) {
         ArrayList<MethodInfo> result = new ArrayList<MethodInfo>();
         for (MethodInfo m : methods.values()) {
-            if (m.signature.name.equals(name)) {
+            if (m.signature.partialSignature.name.equals(name)) {
                 result.add(m);
             }
         }
@@ -271,10 +275,10 @@ public final class ClassDetail {
     public ClassDetail changeBaseType(ClassInfo baseType) {
         Builder builder = new Builder();
         ClassDetail details = builder.setBaseType(baseType)
-                .setInteraces(interfaces)
+                .setInterfaces(interfaces)
                 .setAccessFlags(accessFlags)
-                .setNormalMethods(methods)
-                .setSyntheticMethods(syntheticMethods)
+                .setMethods(methods)
+                .setMethodsIndex(methodsIndex)
                 .setFields(fields)
                 .setStaticFields(staticFields)
                 .setIsFrameworkClass(isFrameworkClass)

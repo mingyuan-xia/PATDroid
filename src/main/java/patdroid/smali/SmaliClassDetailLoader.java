@@ -126,7 +126,7 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         } else {
             builder.setBaseType(Dalvik.findOrCreateClass(ci.scope, classDef.getSuperclass()));
         }
-        builder.setInteraces(findOrCreateClasses(ci.scope, classDef.getInterfaces()));
+        builder.setInterfaces(findOrCreateClasses(ci.scope, classDef.getInterfaces()));
         builder.setAccessFlags(translateAccessFlags(classDef.getAccessFlags()));
         builder.setAllMethods(translateMethods(ci, classDef.getMethods(), collector));
         builder.setStaticFields(translateFields(ci.scope, classDef.getStaticFields()));
@@ -144,8 +144,9 @@ public class SmaliClassDetailLoader extends ClassDetailLoader {
         final ClassInfo retType = Dalvik.findOrCreateClass(ci.scope, method.getReturnType());
         final ImmutableList<ClassInfo> paramTypes = findOrCreateClasses(ci.scope, method.getParameterTypes());
         final MethodSignature signature = new MethodSignature(method.getName(), paramTypes);
+        final FullMethodSignature fullSignature = new FullMethodSignature(retType, signature);
         final int accessFlags = translateAccessFlags(method.getAccessFlags());
-        final MethodInfo mi = new MethodInfo(ci, signature, retType, accessFlags, AccessFlags.SYNTHETIC.isSet(method.getAccessFlags()));
+        final MethodInfo mi = new MethodInfo(ci, fullSignature, accessFlags, AccessFlags.SYNTHETIC.isSet(method.getAccessFlags()));
         Log.msg("Translating method: %s", mi.toString());
         collector.put(mi, method.getImplementation());
         return mi;

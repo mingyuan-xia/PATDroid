@@ -1146,15 +1146,8 @@ final class MethodImplementationTranslator {
         ClassInfo ci = Dalvik.findOrCreateClass(scope, method.getDefiningClass());
         ClassInfo retType = Dalvik.findOrCreateClass(scope, method.getReturnType());
         ImmutableList<ClassInfo> paramTypes = SmaliClassDetailLoader.findOrCreateClasses(scope, method.getParameterTypes());
-        MethodSignature signature = new MethodSignature(method.getName(), paramTypes);
-        MethodInfo userMethod = ci.findMethod(signature);
-        // for user methods, there wont be two methods with the same signature in one class
-        if (userMethod != null && userMethod.returnType == retType) return userMethod;
-        // the tricky part is with synthetic methods, which could violate this rule
-        for (MethodInfo mi: ci.mutableDetail.syntheticMethods.get(signature)) {
-            if (mi.returnType == retType) return mi;
-        }
-        return null;
+        FullMethodSignature signature = new FullMethodSignature(retType, method.getName(), paramTypes);
+        return ci.findMethod(signature);
     }
 
     private Invocation resolveInvocation(MethodReference mr, boolean isStatic, int[] args) {
@@ -1174,8 +1167,8 @@ final class MethodImplementationTranslator {
         ClassInfo ci = Dalvik.findOrCreateClass(scope, mr.getDefiningClass());
         ClassInfo retType = Dalvik.findOrCreateClass(scope, mr.getReturnType());
         ImmutableList<ClassInfo> paramTypes = SmaliClassDetailLoader.findOrCreateClasses(scope, mr.getParameterTypes());
-        MethodSignature signature = new MethodSignature(mr.getName(), paramTypes);
-        return new MethodInfo(ci, signature, retType, 0, false);
+        FullMethodSignature signature = new FullMethodSignature(retType, mr.getName(), paramTypes);
+        return new MethodInfo(ci, signature, 0, false);
     }
 
     private Instruction translateInvoke(final Instruction35c i5) {
@@ -1306,18 +1299,18 @@ final class MethodImplementationTranslator {
             int[] args;
 
             if (!mi.isStatic()) {
-                args = new int[mi.signature.paramTypes.size() + 1];
-                for (int i = mi.signature.paramTypes.size() - 1; i >= 0; --i) {
-                    ClassInfo paramType = mi.signature.paramTypes.get(i);
+                args = new int[mi.signature.partialSignature.paramTypes.size() + 1];
+                for (int i = mi.signature.partialSignature.paramTypes.size() - 1; i >= 0; --i) {
+                    ClassInfo paramType = mi.signature.partialSignature.paramTypes.get(i);
                     if (paramType == scope.primitiveLong || paramType == scope.primitiveDouble)
                         --reg;
                     args[i + 1] = --reg;
                 }
                 args[0] = --reg;
             } else {
-                args = new int[mi.signature.paramTypes.size()];
-                for (int i = mi.signature.paramTypes.size() - 1; i >= 0; --i) {
-                    ClassInfo paramType = mi.signature.paramTypes.get(i);
+                args = new int[mi.signature.partialSignature.paramTypes.size()];
+                for (int i = mi.signature.partialSignature.paramTypes.size() - 1; i >= 0; --i) {
+                    ClassInfo paramType = mi.signature.partialSignature.paramTypes.get(i);
                     if (paramType == scope.primitiveLong || paramType == scope.primitiveDouble)
                         --reg;
                     args[i] = --reg;

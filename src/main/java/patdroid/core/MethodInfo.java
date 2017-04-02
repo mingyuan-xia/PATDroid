@@ -47,7 +47,7 @@ public final class MethodInfo {
     /**
      * The signature of the method
      */
-    public final MethodSignature signature;
+    public final FullMethodSignature signature;
     /**
      * The modifiers, in the format of {@link java.lang.reflect.Modifier}
      */
@@ -56,11 +56,6 @@ public final class MethodInfo {
      * Whether the method is a compiler-generated method
      */
     public final boolean isSynthetic;
-    /**
-     * The return type
-     * <p> if the method is a constructor or a static initializer, this will always be void </p>
-     */
-    public final ClassInfo returnType;
 
     /**
      * Instruction streamline
@@ -78,14 +73,12 @@ public final class MethodInfo {
     /**
      * Create a method info that is part of a class
      * @param type the class
-     * @param signature the method signature
-     * @param returnType the return type
+     * @param signature the full method signature
      * @param accessFlags the access flags
      */
-    public MethodInfo(ClassInfo type, MethodSignature signature, ClassInfo returnType, int accessFlags, boolean isSynthetic) {
+    public MethodInfo(ClassInfo type, FullMethodSignature signature, int accessFlags, boolean isSynthetic) {
         this.type = type;
         this.signature = signature;
-        this.returnType = returnType;
         this.modifiers = accessFlags;
         this.isSynthetic = isSynthetic;
     }
@@ -147,7 +140,7 @@ public final class MethodInfo {
      * @return true if the method is a constructor
      */
     public boolean isConstructor() {
-        return signature.name.equals(CONSTRUCTOR);
+        return signature.partialSignature.name.equals(CONSTRUCTOR);
     }
 
     /**

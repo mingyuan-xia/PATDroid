@@ -20,10 +20,7 @@
 package patdroid.permission;
 
 import com.google.common.collect.ImmutableList;
-import patdroid.core.ClassInfo;
-import patdroid.core.MethodInfo;
-import patdroid.core.MethodSignature;
-import patdroid.core.Scope;
+import patdroid.core.*;
 
 import java.io.*;
 
@@ -74,14 +71,14 @@ public class PScoutParser {
         paramTypes = a[1].replace(" ", "").split(",");
         final MethodSignature signature = new MethodSignature(methodName, findOrCreateClasses(paramTypes));
         ClassInfo ci = scope.findOrCreateClass(className);
-        return (ci == null ? null : ci.findMethod(signature));
+        return (ci == null ? null : ci.findMethod(new FullMethodSignature(findOrCreateClass(returnType), signature)));
     }
 
     /**
      * Convert PSCout-style type name to canonical form
      *
-     * @param t
-     * @return
+     * @param t PSCout-style type name
+     * @return a ClassInfo
      */
     private ClassInfo findOrCreateClass(String t) {
         if (!t.endsWith("[]")) {

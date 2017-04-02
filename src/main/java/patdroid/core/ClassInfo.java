@@ -41,20 +41,22 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public final class ClassInfo {
     private static final ClassDetail MISSING_DETAIL = new ClassDetail.Builder().build();
-    private static final MethodSignature STATIC_INITIALIZER = MethodSignature.of(MethodInfo.STATIC_INITIALIZER);
-    private final MethodSignature DEFAULT_CONSTRUCTOR = MethodSignature.of(MethodInfo.CONSTRUCTOR, this);
+    public final FullMethodSignature STATIC_INITIALIZER;
+    public final FullMethodSignature DEFAULT_CONSTRUCTOR;
 
     public final Scope scope;
     public final String fullName;
     public ClassDetail mutableDetail = MISSING_DETAIL;
 
     /**
-     * @param scope
+     * @param scope the scope that this ClassInfo belongs to
      * @param fullName the full name of the class
      */
     public ClassInfo(Scope scope, String fullName) {
         this.scope = scope;
         this.fullName = fullName;
+        this.DEFAULT_CONSTRUCTOR = new FullMethodSignature(scope.primitiveVoid, MethodInfo.CONSTRUCTOR, this);
+        this.STATIC_INITIALIZER = new FullMethodSignature(scope.primitiveVoid, MethodInfo.STATIC_INITIALIZER);
     }
 
     /**
@@ -133,7 +135,7 @@ public final class ClassInfo {
      * @param signature the method signature
      * @return the method in this class, or null if not found or the class is missing
      */
-    public MethodInfo findMethodHere(MethodSignature signature) {
+    public MethodInfo findMethodHere(FullMethodSignature signature) {
         return mutableDetail.methods.get(signature);
     }
 
@@ -168,7 +170,7 @@ public final class ClassInfo {
      * @param signature the method signature
      * @return  the method representation, or null if not found or the class is missing
      */
-    public MethodInfo findMethod(MethodSignature signature) {
+    public MethodInfo findMethod(FullMethodSignature signature) {
         return mutableDetail.findMethod(signature);
     }
 
