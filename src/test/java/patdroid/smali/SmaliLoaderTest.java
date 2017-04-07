@@ -21,6 +21,8 @@ public class SmaliLoaderTest {
         ldr.loadAll(scope);
         Assert.assertNotNull(scope.findClass("android.app.Activity"));
         Assert.assertNotNull(scope.findClass("android.view.View"));
+        Assert.assertTrue(scope.findClass("android.view.View").isConvertibleTo(scope.findClass("java.lang.Object")));
+        Assert.assertFalse(scope.findClass("java.lang.Object").isConvertibleTo(scope.findClass("android.view.View")));
         Assert.assertNull(scope.findClass("android.bluetooth.le.ScanResult")); // api21
     }
 }
