@@ -46,7 +46,7 @@ public class FullMethodSignature {
 
     @Override
     public String toString() {
-        return returnType + partialSignature.toString();
+        return partialSignature + ":" + returnType;
     }
 
 }

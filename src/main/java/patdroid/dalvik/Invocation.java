@@ -2,6 +2,8 @@ package patdroid.dalvik;
 
 import patdroid.core.MethodInfo;
 
+import java.util.Arrays;
+
 public class Invocation {
     public Invocation(boolean isResolved, MethodInfo target, int[] args) {
         this.isResolved = isResolved;
@@ -13,6 +15,6 @@ public class Invocation {
     public int[] args;
     @Override
     public String toString() {
-        return target.toString() + ", " + args.toString() + (isResolved ? "" : "<NOT_RESOLVED>");
+        return "[" + target + ", " + Arrays.toString(args) + (isResolved ? "]" : "<NOT_RESOLVED>]");
     }
 }
