@@ -2,19 +2,21 @@ package patdroid.smali;
 
 import org.junit.Assert;
 import org.junit.Test;
+import patdroid.core.ClassInfo;
+import patdroid.core.MethodInfo;
 import patdroid.core.Scope;
 
 import java.io.File;
 import java.util.logging.Logger;
 
-public class SmaliLoaderTest {
+public class ClassInfoTest {
     private static final File FRAMEWORK_CLASSES_FOLDER = new File("apilevels");
     private static final int API_LEVEL = 19;
     private final Scope scope = new Scope();
     private static final Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     @Test
-    public void testLoadFrameworkClasses() {
+    public void testClassInfo() {
         SmaliClassDetailLoader ldr;
         try {
             ldr = SmaliClassDetailLoader.fromFramework(FRAMEWORK_CLASSES_FOLDER, API_LEVEL);
@@ -23,10 +25,15 @@ public class SmaliLoaderTest {
             return ;
         }
         ldr.loadAll(scope);
-        Assert.assertNotNull(scope.findClass("android.app.Activity"));
-        Assert.assertNotNull(scope.findClass("android.view.View"));
-        Assert.assertTrue(scope.findClass("android.view.View").isConvertibleTo(scope.findClass("java.lang.Object")));
-        Assert.assertFalse(scope.findClass("java.lang.Object").isConvertibleTo(scope.findClass("android.view.View")));
-        Assert.assertNull(scope.findClass("android.bluetooth.le.ScanResult")); // api21
+        ClassInfo urlConnection = scope.findClass("java.net.URLConnection");
+        ClassInfo httpUrlConnection = scope.findClass("java.net.HttpURLConnection");
+        Assert.assertTrue((httpUrlConnection.isConvertibleTo(urlConnection)));
+        Assert.assertFalse(urlConnection.isConvertibleTo(httpUrlConnection));
+
+        MethodInfo[] urlConnectionConnect = urlConnection.findMethodsHere("connect");
+        MethodInfo[] httpUrlConnectionConnect = httpUrlConnection.findMethodsHere("connect");
+        Assert.assertTrue(urlConnectionConnect.length == 1);
+        Assert.assertTrue(httpUrlConnectionConnect.length == 0);
+
     }
 }

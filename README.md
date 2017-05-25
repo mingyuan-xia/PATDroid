@@ -6,9 +6,10 @@ dependencies {
     compile group: 'mxia.me', name: 'patdroid', version: '1.0.0'
 }
 ```
+The `master` branch is the nightly dev branch, which could diverge greatly from the maven artifacts.
 
 ## Packages
-Here is a one-sentence description for each package. Find the detailed usage tutorials on our wiki by clicking on the package name. Most public APIs are Java-doced. PATDroid requires Java6+. It goes well with Oracle/OpenJDK 1.6, 1.7, Dalvik (Yes, you can run it on a smartphone). We provide gradle, Intellij IDEA and Eclipse support for the project. Gradle is default.
+Here is a one-sentence description for each package. Find the detailed usage tutorials on our wiki by clicking on the package name to redirect to their wiki pages. Most public APIs are Java-doced. PATDroid requires Java6+. It goes well with Oracle/OpenJDK 1.6, 1.7, Dalvik (Yes, you can run it on a smartphone). Gradle (wrapper) is the default build system. You can import the project to IntelliJ IDEA (File->Import from Gradle Project) and Eclipse (similar).
 
 * [`patdroid.core`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-core): provide abstractions for methods, classes, fields, and primitive Java type values
 * [`patdroid.permission`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-permission): specify what Android permissions are needed for every Android APIs
@@ -16,17 +17,15 @@ Here is a one-sentence description for each package. Find the detailed usage tut
 * [`patdroid.dalvik`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-dalvik): Android Dalvik JVM instructions and representations
 * [`patdroid.smali`](https://github.com/mingyuan-xia/PATDroid/wiki/package:-smali): using [SMALI](https://github.com/JesusFreke/smali) to extract classes, methods, fields and instructions from an APK
 
-According to our blueprint, we plan to release the following components one by one in the near future:
-* ~~`patdroid.dex2jar`: using [dex2jar](https://github.com/pxb1988/dex2jar) to extract classes, methods, fields and instructions from an APK~~
-* `patdroid.manifest`: the model for AndroidManifest.xml and Android components such as activity, service, broadcast receivers
-* `patdroid.taint`: sources, sinks and taint propagation support for taint analysis
-* `patdroid.lifecycle`: modelling the life cycle methods for Android components (Activity, Service, etc)
-* `patdroid.layout`: parsing and manipulating layout.xml
-* `patdroid.soot`: my tribute to [Sable's Soot](http://sable.github.io/soot/). I learned a lot from attending Sable's seminars held at [McGill McConnell 2rd floor](https://www.mcgill.ca/maps/mcconnell-engineering-building)
+Closely related functionality:
+* ~~`patdroid.dex2jar`~~: using [dex2jar](https://github.com/pxb1988/dex2jar) to extract classes, methods, fields and instructions from an APK. This has been deprecated and removed.
+* Layout XMLs and manifest file, please refer to [apktool](https://ibotpeaches.github.io/Apktool/) and various AXML parsers exist for different programming languages.
+* Taint sources and sinks: FlowDroid provides a list of [sources and sinks for taint analysis](https://github.com/secure-software-engineering/soot-infoflow-android/blob/develop/SourcesAndSinks.txt) that we cross referenced.
+* Soot: my tribute to [Sable's Soot](http://sable.github.io/soot/) and the happy seminar time at [McGill McConnell 2rd floor](https://www.mcgill.ca/maps/mcconnell-engineering-building). Soot provides a disassembler similar to smali, and a lot of high-level program analysis constructs and tasks, such as Call Graph. Also [FlowDroid](https://github.com/secure-software-engineering/soot-infoflow-android) provides a nice and complete flow analysis.
 
 
 ## History and Philosophy
-PATDroid was part of [AppAudit](http://appaudit.io), which is a security tool that checks if an Android app leaks sensitive user data.
+PATDroid was part of [AppAudit](http://appaudit.io), which is a tool that simulates the execution of app code and checks if it leaks sensitive user data.
 You can find out more details from our [S&P'15 paper](http://www.ieee-security.org/TC/SP2015/papers-archived/6949a899.pdf).
 We make part of AppAudit public to be useful to researchers and developers.
 Overall, we try to make the entire project
